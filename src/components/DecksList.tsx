@@ -15,6 +15,7 @@ type DeckSummary = {
   isBuilt: boolean;
   elements: string[];
   totalCards: number;
+  totalCopies: number;
   sufficientCount: number;
 };
 
@@ -97,6 +98,7 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
                   <span>
                     {deck.sufficientCount}/{deck.totalCards} cartas na quantidade certa
                   </span>
+                  <span>{deck.totalCopies} cópias no total</span>
                 </div>
               </Link>
               <form action={toggleDeckBuilt.bind(null, deck.id)} className="deck-star-form">

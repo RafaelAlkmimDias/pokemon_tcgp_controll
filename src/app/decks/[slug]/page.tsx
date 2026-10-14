@@ -14,7 +14,7 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
 
   if (!detail) notFound();
 
-  const { deck, sufficientCount } = detail;
+  const { deck, sufficientCount, totalCopies } = detail;
 
   return (
     <main className="container">
@@ -50,6 +50,7 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
             </span>
           )}
         </span>
+        <span>{totalCopies} cópias no total</span>
       </div>
 
       <div className="grid">

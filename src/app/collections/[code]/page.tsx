@@ -43,6 +43,9 @@ export default async function CollectionPage({
             {collection.code} · {formatDate(collection.releaseDate)} ·{" "}
             {collection._count.cards} cartas no total
           </p>
+          <Link href={`/collections/${collection.code}/cards`} className="pack-pill">
+            Ver todas as cartas da coleção
+          </Link>
         </div>
       </div>
 

@@ -45,6 +45,22 @@ export async function getCollectionDetail(code: string) {
   return { collection: { ...collection, packs }, cardsWithoutPack };
 }
 
+export async function getCollectionCards(code: string) {
+  const collection = await prisma.collection.findUnique({ where: { code } });
+  if (!collection) return null;
+
+  const cards = await prisma.card.findMany({
+    where: { collectionId: collection.id },
+    orderBy: { number: "asc" },
+  });
+
+  return {
+    collection,
+    cards,
+    ownedCount: cards.filter((card) => card.ownedQuantity > 0).length,
+  };
+}
+
 export async function getPackDetail(collectionCode: string, packName: string) {
   const collection = await prisma.collection.findUnique({ where: { code: collectionCode } });
   if (!collection) return null;

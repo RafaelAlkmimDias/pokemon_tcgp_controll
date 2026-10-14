@@ -24,16 +24,23 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
         <span>{deck.displayName}</span>
       </nav>
 
-      <h1 className="page-title">{deck.displayName}</h1>
+      <div className="deck-detail-heading">
+        <h1 className="page-title">{deck.displayName}</h1>
+        <form action={toggleDeckBuilt.bind(null, deck.id)}>
+          <button
+            type="submit"
+            className={deck.isBuilt ? "deck-star deck-star-active" : "deck-star"}
+            aria-label={deck.isBuilt ? "Desmarcar como montado" : "Marcar como montado"}
+            title={deck.isBuilt ? "Montado" : "Marcar como montado"}
+          >
+            {deck.isBuilt ? "★" : "☆"}
+          </button>
+        </form>
+      </div>
       <p className="page-subtitle">
         {formatPercent(deck.popularity)} do meta · {formatPercent(deck.expectedWinRate)} de
         vitórias esperada
       </p>
-      <form action={toggleDeckBuilt.bind(null, deck.id)} className="deck-built-toggle-form">
-        <button type="submit" className="deck-built-toggle deck-built-toggle-inline">
-          {deck.isBuilt ? "✓ Montado" : "Marcar como montado"}
-        </button>
-      </form>
       <div className="count-lines count-lines-header">
         <span>
           {sufficientCount}/{deck.cards.length} cartas na quantidade certa

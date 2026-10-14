@@ -99,9 +99,16 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
                   </span>
                 </div>
               </Link>
-              <form action={toggleDeckBuilt.bind(null, deck.id)}>
-                <button type="submit" className="deck-built-toggle">
-                  {deck.isBuilt ? "✓ Montado" : "Marcar como montado"}
+              <form action={toggleDeckBuilt.bind(null, deck.id)} className="deck-star-form">
+                <button
+                  type="submit"
+                  className={deck.isBuilt ? "deck-star deck-star-active" : "deck-star"}
+                  aria-label={
+                    deck.isBuilt ? "Desmarcar como montado" : "Marcar como montado"
+                  }
+                  title={deck.isBuilt ? "Montado" : "Marcar como montado"}
+                >
+                  {deck.isBuilt ? "★" : "☆"}
                 </button>
               </form>
             </div>

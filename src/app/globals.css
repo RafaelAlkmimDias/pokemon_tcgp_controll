@@ -182,29 +182,44 @@ a {
   border-color: color-mix(in srgb, #3b82f6 35%, var(--border));
 }
 
-.deck-built-toggle {
-  margin-top: 0.75rem;
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
-  background: var(--background);
-  color: var(--foreground);
+.deck-tile {
+  position: relative;
+  padding-right: 2.5rem;
+}
+
+.deck-star-form {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+}
+
+.deck-star {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--muted);
   cursor: pointer;
 }
 
-.deck-built-toggle:hover {
-  border-color: var(--accent);
+.deck-star:hover {
+  color: #f59e0b;
 }
 
-.deck-built-toggle-form {
-  margin-bottom: 1rem;
+.deck-star-active {
+  color: #f59e0b;
 }
 
-.deck-built-toggle-inline {
-  width: auto;
-  margin-top: 0;
+.deck-detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.deck-detail-heading .page-title {
+  margin-bottom: 0;
 }
 
 .tile.card-tile {

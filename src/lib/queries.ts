@@ -57,10 +57,13 @@ export async function getPackDetail(collectionCode: string, packName: string) {
   });
   if (!pack) return null;
 
+  const cards = pack.cards.map((cp) => cp.card);
+
   return {
     collection,
     pack,
-    cards: pack.cards.map((cp) => cp.card),
+    cards,
+    ownedCount: cards.filter((card) => card.ownedQuantity > 0).length,
   };
 }
 

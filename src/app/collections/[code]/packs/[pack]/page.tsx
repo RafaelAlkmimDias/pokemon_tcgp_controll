@@ -14,7 +14,7 @@ export default async function PackPage({
 
   if (!detail) notFound();
 
-  const { collection, pack, cards } = detail;
+  const { collection, pack, cards, ownedCount } = detail;
 
   return (
     <main className="container">
@@ -28,7 +28,8 @@ export default async function PackPage({
 
       <h1 className="page-title">Pacote {pack.name}</h1>
       <p className="page-subtitle">
-        {collection.name} · {cards.length} cartas neste pacote
+        {collection.name} · {cards.length} cartas neste pacote · {ownedCount} diferentes
+        que você tem
       </p>
 
       {cards.length === 0 ? (

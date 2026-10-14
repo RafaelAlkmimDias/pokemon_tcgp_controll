@@ -14,7 +14,8 @@ App para acompanhar coleções, pacotes e cartas do Pokémon TCG Pocket.
 Collection (coleção/set, ex: "A1 - Genetic Apex")
  └─ Pack[]      (pacotes da coleção, ex: "Charizard", "Mewtwo", "Pikachu")
  └─ Card[]      (cartas da coleção)
-      └─ Pack[] (em quais pacotes específicos a carta pode sair — relação N:N via CardPack)
+      ├─ Pack[]  (em quais pacotes específicos a carta pode sair — relação N:N via CardPack)
+      └─ Print   (a impressão/arte física da carta — N:1, ver abaixo)
 ```
 
 Uma carta pertence a uma coleção e pode sair em um ou mais pacotes dessa coleção.
@@ -22,7 +23,14 @@ Isso permite identificar cartas exclusivas de um único pacote dentro de coleç�
 múltiplos pacotes (ex: a carta "Mewtwo" só sai no pacote "Mewtwo" da coleção A1, mesmo
 a coleção A1 tendo também os pacotes "Charizard" e "Pikachu").
 
-Veja `prisma/schema.prisma` para o schema completo (`Collection`, `Pack`, `Card`, `CardPack`).
+**Print (reimpressões):** algumas coleções (principalmente "Deluxe Pack") reaproveitam a
+mesma arte/impressão de cartas já lançadas em coleções anteriores. Cada `Card` aponta
+para um `Print` (identificado pela arte original da carta); a quantidade possuída
+(`ownedQuantity`) fica no `Print`, não na `Card`. Assim, marcar uma carta como possuída
+em uma coleção automaticamente conta como possuída em toda coleção que reaproveita a
+mesma impressão.
+
+Veja `prisma/schema.prisma` para o schema completo (`Collection`, `Pack`, `Card`, `CardPack`, `Print`).
 
 ## Fonte dos dados
 

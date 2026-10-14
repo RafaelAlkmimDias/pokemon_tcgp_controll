@@ -46,3 +46,7 @@ export function formatDate(date: Date | null) {
 export function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
+
+export function formatPercent(value: number) {
+  return `${(value * 100).toFixed(1)}%`;
+}

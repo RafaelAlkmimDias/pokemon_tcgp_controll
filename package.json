@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "download:images": "tsx scripts/download-images.ts",
+    "sync:decks": "tsx scripts/sync-decks.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

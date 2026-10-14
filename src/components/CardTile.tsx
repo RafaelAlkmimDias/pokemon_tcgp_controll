@@ -10,14 +10,26 @@ type CardWithPrint = Card & { print: { id: string; ownedQuantity: number } };
 export function CardTile({
   card,
   collectionCode,
+  neededQuantity,
 }: {
   card: CardWithPrint;
   collectionCode: string;
+  /** When set, shows "possui/precisa" instead of just the owned count, and
+   * tints the tile green only once the owned amount meets this quantity. */
+  neededQuantity?: number;
 }) {
-  const owned = card.print.ownedQuantity > 0;
+  const owned = card.print.ownedQuantity;
+  const hasEnough = neededQuantity === undefined ? owned > 0 : owned >= neededQuantity;
+
+  let toneClass = "";
+  if (neededQuantity !== undefined) {
+    toneClass = hasEnough ? "card-tile-owned" : "card-tile-missing";
+  } else if (hasEnough) {
+    toneClass = "card-tile-owned";
+  }
 
   return (
-    <div className={`tile card-tile ${owned ? "card-tile-owned" : ""}`}>
+    <div className={`tile card-tile ${toneClass}`}>
       <Link
         href={`/collections/${collectionCode}/cards/${card.number}`}
         className="card-tile-link"
@@ -48,7 +60,14 @@ export function CardTile({
             −
           </button>
         </form>
-        <span className="qty-count">{card.print.ownedQuantity}</span>
+        <span className="qty-count">
+          {neededQuantity !== undefined ? `${owned}/${neededQuantity}` : owned}
+          {neededQuantity !== undefined && hasEnough && (
+            <span className="complete-check" aria-label="Quantidade suficiente">
+              ✓
+            </span>
+          )}
+        </span>
         <form action={incrementOwnedQuantity.bind(null, card.print.id)}>
           <button
             type="submit"

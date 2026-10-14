@@ -23,7 +23,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <header className="site-header">
-          <Link href="/">Pokémon TCG Pocket — Controle</Link>
+          <nav className="site-nav">
+            <Link href="/">Pokémon TCG Pocket — Controle</Link>
+            <Link href="/decks">Baralhos</Link>
+          </nav>
         </header>
         {children}
       </body>

@@ -136,3 +136,53 @@ export async function getCardDetail(collectionCode: string, number: number) {
     siblingCards: card.print.cards.filter((sibling) => sibling.id !== card.id),
   };
 }
+
+function isDeckCardSufficient(deckCard: { quantity: number; card: { print: { ownedQuantity: number } } }) {
+  return deckCard.card.print.ownedQuantity >= deckCard.quantity;
+}
+
+export async function getDecks() {
+  const decks = await prisma.deck.findMany({
+    orderBy: [{ metaScore: "desc" }, { popularity: "desc" }],
+    include: {
+      cards: { include: { card: { include: { print: { select: { ownedQuantity: true } } } } } },
+    },
+  });
+
+  return decks.map((deck) => ({
+    id: deck.id,
+    slug: deck.slug,
+    displayName: deck.displayName,
+    popularity: deck.popularity,
+    expectedWinRate: deck.expectedWinRate,
+    powerScore: deck.powerScore,
+    metaScore: deck.metaScore,
+    totalCards: deck.cards.length,
+    sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
+  }));
+}
+
+export async function getDeckDetail(slug: string) {
+  const deck = await prisma.deck.findUnique({
+    where: { slug },
+    include: {
+      cards: {
+        include: {
+          card: {
+            include: {
+              collection: true,
+              print: { select: { id: true, ownedQuantity: true } },
+            },
+          },
+        },
+        orderBy: [{ quantity: "desc" }, { card: { name: "asc" } }],
+      },
+    },
+  });
+  if (!deck) return null;
+
+  return {
+    deck,
+    sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
+  };
+}

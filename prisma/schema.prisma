@@ -97,6 +97,7 @@ model Card {
   collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   print      Print      @relation(fields: [printId], references: [id])
   packs      CardPack[]
+  decks      DeckCard[]
 
   @@unique([collectionId, number])
   @@map("cards")
@@ -111,4 +112,34 @@ model CardPack {
 
   @@id([cardId, packId])
   @@map("card_packs")
+}
+
+// A competitive deck archetype, synced from tournament meta data.
+// Fully re-derived on every sync (scripts/sync-decks.ts) - not user-editable.
+model Deck {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  displayName     String
+  popularity      Float
+  expectedWinRate Float
+  powerScore      Float?
+  metaScore       Float?
+  syncedAt        DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  cards DeckCard[]
+
+  @@map("decks")
+}
+
+model DeckCard {
+  deckId   String
+  cardId   String
+  quantity Int
+
+  deck Deck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@id([deckId, cardId])
+  @@map("deck_cards")
 }

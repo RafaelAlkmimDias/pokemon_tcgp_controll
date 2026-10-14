@@ -22,12 +22,27 @@ export async function getCollectionDetail(code: string) {
   });
   if (!collection) return null;
 
+  const ownedCountByPack = await prisma.cardPack.groupBy({
+    by: ["packId"],
+    where: {
+      pack: { collectionId: collection.id },
+      card: { ownedQuantity: { gt: 0 } },
+    },
+    _count: { _all: true },
+  });
+  const ownedByPackId = new Map(ownedCountByPack.map((row) => [row.packId, row._count._all]));
+
+  const packs = collection.packs.map((pack) => ({
+    ...pack,
+    ownedCount: ownedByPackId.get(pack.id) ?? 0,
+  }));
+
   const cardsWithoutPack = await prisma.card.findMany({
     where: { collectionId: collection.id, packs: { none: {} } },
     orderBy: { number: "asc" },
   });
 
-  return { collection, cardsWithoutPack };
+  return { collection: { ...collection, packs }, cardsWithoutPack };
 }
 
 export async function getPackDetail(collectionCode: string, packName: string) {

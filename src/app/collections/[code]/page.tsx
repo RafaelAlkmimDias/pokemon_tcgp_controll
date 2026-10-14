@@ -44,6 +44,7 @@ export default async function CollectionPage({
               <div className="tile-title">{pack.name}</div>
               <div className="tile-meta">
                 <span>{pack._count.cards} cartas</span>
+                <span>{pack.ownedCount} diferentes que você tem</span>
               </div>
             </Link>
           ))}

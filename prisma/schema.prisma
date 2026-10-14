@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  series      String
+  releaseDate DateTime?
+  cardCount   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  packs Pack[]
+  cards Card[]
+
+  @@map("collections")
+}
+
+model Pack {
+  id           String   @id @default(cuid())
+  name         String
+  collectionId String
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  cards      CardPack[]
+
+  @@unique([collectionId, name])
+  @@map("packs")
+}
+
+enum Rarity {
+  C
+  U
+  R
+  RR
+  AR
+  SR
+  SAR
+  IM
+  UR
+  S
+  SSR
+  UNKNOWN
+}
+
+enum CardType {
+  POKEMON
+  SUPPORTER
+  ITEM
+  FOSSIL
+  TOOL
+}
+
+model Card {
+  id           String    @id @default(cuid())
+  collectionId String
+  number       Int
+  name         String
+  rarity       Rarity    @default(UNKNOWN)
+  imageUrl     String?
+  type         CardType?
+  element      String?
+  stage        String?
+  health       Int?
+  retreatCost  Int?
+  weakness     String?
+  evolvesFrom  String?
+  goodWith     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  packs      CardPack[]
+
+  @@unique([collectionId, number])
+  @@map("cards")
+}
+
+model CardPack {
+  cardId String
+  packId String
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  pack Pack @relation(fields: [packId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, packId])
+  @@map("card_packs")
+}

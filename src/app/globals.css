@@ -110,6 +110,12 @@ a {
   margin-bottom: 1.5rem;
 }
 
+.complete-check {
+  color: #22c55e;
+  font-weight: 700;
+  margin-left: 0.4rem;
+}
+
 .section-title {
   font-size: 1.1rem;
   margin: 2rem 0 0.75rem;

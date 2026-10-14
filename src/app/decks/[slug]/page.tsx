@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDeckDetail } from "@/lib/queries";
 import { formatPercent } from "@/lib/display";
 import { CardTile } from "@/components/CardTile";
+import { toggleDeckBuilt } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,11 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
         {formatPercent(deck.popularity)} do meta · {formatPercent(deck.expectedWinRate)} de
         vitórias esperada
       </p>
+      <form action={toggleDeckBuilt.bind(null, deck.id)} className="deck-built-toggle-form">
+        <button type="submit" className="deck-built-toggle deck-built-toggle-inline">
+          {deck.isBuilt ? "✓ Montado" : "Marcar como montado"}
+        </button>
+      </form>
       <div className="count-lines count-lines-header">
         <span>
           {sufficientCount}/{deck.cards.length} cartas na quantidade certa

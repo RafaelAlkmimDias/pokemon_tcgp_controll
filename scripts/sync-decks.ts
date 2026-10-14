@@ -134,8 +134,10 @@ async function main() {
     synced++;
   }
 
+  // Never prune a deck the user marked as built, even if it falls out of the
+  // current meta - that's user state, same rule as ownedQuantity.
   const { count: removed } = await prisma.deck.deleteMany({
-    where: { slug: { notIn: [...syncedSlugs] } },
+    where: { slug: { notIn: [...syncedSlugs] }, isBuilt: false },
   });
 
   console.log(

@@ -170,6 +170,7 @@ export async function getDecks() {
       expectedWinRate: deck.expectedWinRate,
       powerScore: deck.powerScore,
       metaScore: deck.metaScore,
+      isBuilt: deck.isBuilt,
       elements,
       totalCards: deck.cards.length,
       sufficientCount: deck.cards.filter(isDeckCardSufficient).length,

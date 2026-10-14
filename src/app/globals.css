@@ -173,6 +173,40 @@ a {
   gap: 0.15rem;
 }
 
+.deck-tile-link {
+  display: block;
+}
+
+.deck-tile-built {
+  background: color-mix(in srgb, #3b82f6 12%, var(--surface));
+  border-color: color-mix(in srgb, #3b82f6 35%, var(--border));
+}
+
+.deck-built-toggle {
+  margin-top: 0.75rem;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.deck-built-toggle:hover {
+  border-color: var(--accent);
+}
+
+.deck-built-toggle-form {
+  margin-bottom: 1rem;
+}
+
+.deck-built-toggle-inline {
+  width: auto;
+  margin-top: 0;
+}
+
 .tile.card-tile {
   position: relative;
   padding-bottom: 3.25rem;

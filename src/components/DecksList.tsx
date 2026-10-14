@@ -3,13 +3,16 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ELEMENT_LABEL, capitalize, formatPercent } from "@/lib/display";
+import { toggleDeckBuilt } from "@/lib/actions";
 
 type DeckSummary = {
+  id: string;
   slug: string;
   displayName: string;
   popularity: number;
   expectedWinRate: number;
   metaScore: number | null;
+  isBuilt: boolean;
   elements: string[];
   totalCards: number;
   sufficientCount: number;
@@ -82,20 +85,26 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
       ) : (
         <div className="grid">
           {visibleDecks.map((deck) => (
-            <Link
+            <div
               key={deck.slug}
-              href={`/decks/${encodeURIComponent(deck.slug)}`}
-              className="tile"
+              className={deck.isBuilt ? "tile deck-tile deck-tile-built" : "tile deck-tile"}
             >
-              <div className="tile-title">{deck.displayName}</div>
-              <div className="tile-meta">
-                <span>{formatPercent(deck.popularity)} do meta</span>
-                <span>{formatPercent(deck.expectedWinRate)} de vitórias esperada</span>
-                <span>
-                  {deck.sufficientCount}/{deck.totalCards} cartas na quantidade certa
-                </span>
-              </div>
-            </Link>
+              <Link href={`/decks/${encodeURIComponent(deck.slug)}`} className="deck-tile-link">
+                <div className="tile-title">{deck.displayName}</div>
+                <div className="tile-meta">
+                  <span>{formatPercent(deck.popularity)} do meta</span>
+                  <span>{formatPercent(deck.expectedWinRate)} de vitórias esperada</span>
+                  <span>
+                    {deck.sufficientCount}/{deck.totalCards} cartas na quantidade certa
+                  </span>
+                </div>
+              </Link>
+              <form action={toggleDeckBuilt.bind(null, deck.id)}>
+                <button type="submit" className="deck-built-toggle">
+                  {deck.isBuilt ? "✓ Montado" : "Marcar como montado"}
+                </button>
+              </form>
+            </div>
           ))}
         </div>
       )}

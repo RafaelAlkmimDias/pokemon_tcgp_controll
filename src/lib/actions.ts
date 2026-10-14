@@ -19,3 +19,9 @@ export async function incrementOwnedQuantity(printId: string) {
 export async function decrementOwnedQuantity(printId: string) {
   await adjustOwnedQuantity(printId, -1);
 }
+
+export async function toggleDeckBuilt(deckId: string) {
+  const deck = await prisma.deck.findUniqueOrThrow({ where: { id: deckId } });
+  await prisma.deck.update({ where: { id: deckId }, data: { isBuilt: !deck.isBuilt } });
+  revalidatePath("/", "layout");
+}

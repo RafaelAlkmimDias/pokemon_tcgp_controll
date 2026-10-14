@@ -114,8 +114,9 @@ model CardPack {
   @@map("card_packs")
 }
 
-// A competitive deck archetype, synced from tournament meta data.
-// Fully re-derived on every sync (scripts/sync-decks.ts) - not user-editable.
+// A competitive deck archetype, synced from tournament meta data
+// (scripts/sync-decks.ts). Every field is re-derived on each sync except
+// isBuilt, which is user state and must never be touched by the sync.
 model Deck {
   id              String   @id @default(cuid())
   slug            String   @unique
@@ -124,6 +125,7 @@ model Deck {
   expectedWinRate Float
   powerScore      Float?
   metaScore       Float?
+  isBuilt         Boolean  @default(false)
   syncedAt        DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

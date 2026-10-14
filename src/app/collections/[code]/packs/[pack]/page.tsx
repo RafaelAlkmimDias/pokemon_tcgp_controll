@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPackDetail } from "@/lib/queries";
 import { CardTile } from "@/components/CardTile";
+import { packImageUrl } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ export default async function PackPage({
   if (!detail) notFound();
 
   const { collection, pack, cards, ownedCount } = detail;
+  const packImage = packImageUrl(pack.name);
 
   return (
     <main className="container">
@@ -26,11 +29,27 @@ export default async function PackPage({
         <span>{pack.name}</span>
       </nav>
 
-      <h1 className="page-title">Pacote {pack.name}</h1>
-      <p className="page-subtitle">
-        {collection.name} · {cards.length} cartas neste pacote · {ownedCount} diferentes
-        que você tem
-      </p>
+      <div className="media-header">
+        {packImage && (
+          <div className="pack-detail-image-wrap">
+            <Image
+              src={packImage}
+              alt={`Pacote ${pack.name}`}
+              fill
+              sizes="160px"
+              className="card-image"
+              priority
+            />
+          </div>
+        )}
+        <div>
+          <h1 className="page-title">Pacote {pack.name}</h1>
+          <p className="page-subtitle">
+            {collection.name} · {cards.length} cartas neste pacote · {ownedCount} diferentes
+            que você tem
+          </p>
+        </div>
+      </div>
 
       {cards.length === 0 ? (
         <p className="empty-state">Nenhuma carta cadastrada para este pacote.</p>

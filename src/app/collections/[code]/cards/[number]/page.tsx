@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCardDetail } from "@/lib/queries";
 import { RARITY_CLASS, RARITY_LABEL, TYPE_LABEL, capitalize } from "@/lib/display";
+import { cardImageUrl } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
@@ -28,14 +30,28 @@ export default async function CardPage({
         <span>{card.name}</span>
       </nav>
 
-      <h1 className="page-title">
-        #{card.number} {card.name}
-      </h1>
-      <span className={`badge ${RARITY_CLASS[card.rarity]}`}>
-        {RARITY_LABEL[card.rarity]}
-      </span>
+      <div className="card-detail-header">
+        <div className="card-detail-image-wrap">
+          <Image
+            src={cardImageUrl(collection.code, card.number)}
+            alt={card.name}
+            fill
+            sizes="220px"
+            className="card-image"
+            priority
+          />
+        </div>
+        <div>
+          <h1 className="page-title">
+            #{card.number} {card.name}
+          </h1>
+          <span className={`badge ${RARITY_CLASS[card.rarity]}`}>
+            {RARITY_LABEL[card.rarity]}
+          </span>
+        </div>
+      </div>
 
-      <div className="detail-card" style={{ marginTop: "1.5rem" }}>
+      <div className="detail-card">
         <dl>
           <div className="detail-row">
             <dt>Coleção</dt>

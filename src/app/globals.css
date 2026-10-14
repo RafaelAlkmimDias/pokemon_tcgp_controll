@@ -150,6 +150,19 @@ a {
   gap: 0.4rem;
 }
 
+.card-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.card-image {
+  object-fit: contain;
+}
+
 .card-tile-owned {
   background: color-mix(in srgb, #22c55e 14%, var(--surface));
   border-color: color-mix(in srgb, #22c55e 40%, var(--border));
@@ -225,6 +238,61 @@ a {
 .rarity-legendary {
   background: color-mix(in srgb, #d97706 18%, transparent);
   color: #d97706;
+}
+
+.card-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-detail-image-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 200px;
+  max-width: 45vw;
+  aspect-ratio: 5 / 7;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.media-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.pack-detail-image-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 130px;
+  aspect-ratio: 5 / 8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.collection-logo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 240px;
+  max-width: 70vw;
+  aspect-ratio: 2.27 / 1;
+}
+
+.pack-tile-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 8;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--border);
+  margin-bottom: 0.5rem;
 }
 
 .detail-card {

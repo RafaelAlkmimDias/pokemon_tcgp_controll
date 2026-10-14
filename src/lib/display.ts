@@ -38,6 +38,19 @@ export const TYPE_LABEL: Record<CardType, string> = {
   FOSSIL: "Fóssil",
 };
 
+export const ELEMENT_LABEL: Record<string, string> = {
+  grass: "Grama",
+  fire: "Fogo",
+  water: "Água",
+  lightning: "Elétrico",
+  psychic: "Psíquico",
+  fighting: "Lutador",
+  darkness: "Sombrio",
+  metal: "Metal",
+  dragon: "Dragão",
+  colorless: "Incolor",
+};
+
 export function formatDate(date: Date | null) {
   if (!date) return "Data desconhecida";
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(date);

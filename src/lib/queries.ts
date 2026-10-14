@@ -145,21 +145,36 @@ export async function getDecks() {
   const decks = await prisma.deck.findMany({
     orderBy: [{ metaScore: "desc" }, { popularity: "desc" }],
     include: {
-      cards: { include: { card: { include: { print: { select: { ownedQuantity: true } } } } } },
+      cards: {
+        include: {
+          card: { select: { element: true, print: { select: { ownedQuantity: true } } } },
+        },
+      },
     },
   });
 
-  return decks.map((deck) => ({
-    id: deck.id,
-    slug: deck.slug,
-    displayName: deck.displayName,
-    popularity: deck.popularity,
-    expectedWinRate: deck.expectedWinRate,
-    powerScore: deck.powerScore,
-    metaScore: deck.metaScore,
-    totalCards: deck.cards.length,
-    sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
-  }));
+  return decks.map((deck) => {
+    const elements = [
+      ...new Set(
+        deck.cards
+          .map((deckCard) => deckCard.card.element)
+          .filter((element): element is string => Boolean(element)),
+      ),
+    ].sort();
+
+    return {
+      id: deck.id,
+      slug: deck.slug,
+      displayName: deck.displayName,
+      popularity: deck.popularity,
+      expectedWinRate: deck.expectedWinRate,
+      powerScore: deck.powerScore,
+      metaScore: deck.metaScore,
+      elements,
+      totalCards: deck.cards.length,
+      sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
+    };
+  });
 }
 
 export async function getDeckDetail(slug: string) {

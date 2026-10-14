@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { getDecks } from "@/lib/queries";
-import { formatPercent } from "@/lib/display";
+import { DecksList } from "@/components/DecksList";
 
 export const dynamic = "force-dynamic";
 
@@ -20,24 +19,7 @@ export default async function DecksPage() {
           Nenhum baralho importado ainda. Rode <code>npm run sync:decks</code>.
         </p>
       ) : (
-        <div className="grid">
-          {decks.map((deck) => (
-            <Link
-              key={deck.slug}
-              href={`/decks/${encodeURIComponent(deck.slug)}`}
-              className="tile"
-            >
-              <div className="tile-title">{deck.displayName}</div>
-              <div className="tile-meta">
-                <span>{formatPercent(deck.popularity)} do meta</span>
-                <span>{formatPercent(deck.expectedWinRate)} de vitórias esperada</span>
-                <span>
-                  {deck.sufficientCount}/{deck.totalCards} cartas na quantidade certa
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <DecksList decks={decks} />
       )}
     </main>
   );

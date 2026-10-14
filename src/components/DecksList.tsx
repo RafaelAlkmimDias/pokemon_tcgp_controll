@@ -9,20 +9,40 @@ type DeckSummary = {
   displayName: string;
   popularity: number;
   expectedWinRate: number;
+  metaScore: number | null;
   elements: string[];
   totalCards: number;
   sufficientCount: number;
 };
 
+type SortKey = "metaScore" | "popularity" | "expectedWinRate" | "sufficientCount";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "metaScore", label: "Relevância no meta" },
+  { key: "popularity", label: "% do meta" },
+  { key: "expectedWinRate", label: "% de vitórias esperadas" },
+  { key: "sufficientCount", label: "Cartas na quantidade certa" },
+];
+
+function sortValue(deck: DeckSummary, key: SortKey): number {
+  const value = deck[key];
+  // Nulls (decks without enough data for a score) always sort last.
+  return value === null ? -Infinity : value;
+}
+
 export function DecksList({ decks }: { decks: DeckSummary[] }) {
   const [filter, setFilter] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("metaScore");
 
   const availableElements = useMemo(
     () => [...new Set(decks.flatMap((deck) => deck.elements))].sort(),
     [decks],
   );
 
-  const filteredDecks = filter ? decks.filter((deck) => deck.elements.includes(filter)) : decks;
+  const visibleDecks = useMemo(() => {
+    const filtered = filter ? decks.filter((deck) => deck.elements.includes(filter)) : decks;
+    return [...filtered].sort((a, b) => sortValue(b, sortKey) - sortValue(a, sortKey));
+  }, [decks, filter, sortKey]);
 
   return (
     <>
@@ -46,11 +66,22 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
         ))}
       </div>
 
-      {filteredDecks.length === 0 ? (
+      <label className="sort-control">
+        Ordenar por
+        <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {visibleDecks.length === 0 ? (
         <p className="empty-state">Nenhum baralho desse tipo no meta atual.</p>
       ) : (
         <div className="grid">
-          {filteredDecks.map((deck) => (
+          {visibleDecks.map((deck) => (
             <Link
               key={deck.slug}
               href={`/decks/${encodeURIComponent(deck.slug)}`}

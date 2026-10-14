@@ -1,7 +1,7 @@
 import type { Card, Rarity } from "@prisma/client";
 
 // Rarities excluded from the "cartas" count, shown separately from "cartas totais".
-const RARE_ART_RARITIES = new Set<Rarity>(["AR", "SR", "SAR", "IM", "UR"]);
+const RARE_ART_RARITIES = new Set<Rarity>(["AR", "SR", "SAR", "IM", "UR", "S", "SSR"]);
 
 export function isCommonRarity(rarity: Rarity) {
   return !RARE_ART_RARITIES.has(rarity);

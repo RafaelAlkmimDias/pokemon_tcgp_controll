@@ -3,7 +3,7 @@ import { computeCardStats } from "@/lib/cardStats";
 
 export async function getCollections() {
   const collections = await prisma.collection.findMany({
-    orderBy: { releaseDate: "asc" },
+    orderBy: { releaseDate: "desc" },
     include: { _count: { select: { packs: true } } },
   });
 

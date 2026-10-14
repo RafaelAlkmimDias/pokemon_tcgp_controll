@@ -8,13 +8,13 @@ export async function getCollections() {
   });
 
   const cards = await prisma.card.findMany({
-    select: { collectionId: true, rarity: true, ownedQuantity: true },
+    select: { collectionId: true, rarity: true, print: { select: { ownedQuantity: true } } },
   });
 
-  const cardsByCollectionId = new Map<string, typeof cards>();
+  const cardsByCollectionId = new Map<string, { rarity: (typeof cards)[number]["rarity"]; ownedQuantity: number }[]>();
   for (const card of cards) {
     const list = cardsByCollectionId.get(card.collectionId) ?? [];
-    list.push(card);
+    list.push({ rarity: card.rarity, ownedQuantity: card.print.ownedQuantity });
     cardsByCollectionId.set(card.collectionId, list);
   }
 
@@ -33,7 +33,10 @@ export async function getCollectionDetail(code: string) {
 
   const cards = await prisma.card.findMany({
     where: { collectionId: collection.id },
-    include: { packs: { select: { packId: true } } },
+    include: {
+      packs: { select: { packId: true } },
+      print: { select: { id: true, ownedQuantity: true } },
+    },
     orderBy: { number: "asc" },
   });
 
@@ -48,14 +51,17 @@ export async function getCollectionDetail(code: string) {
     }
   }
 
+  const toStatsInput = (list: typeof cards) =>
+    list.map((card) => ({ rarity: card.rarity, ownedQuantity: card.print.ownedQuantity }));
+
   const packs = collection.packs.map((pack) => ({
     ...pack,
-    stats: computeCardStats(cardsByPackId.get(pack.id) ?? []),
+    stats: computeCardStats(toStatsInput(cardsByPackId.get(pack.id) ?? [])),
   }));
 
   return {
     collection: { ...collection, packs },
-    stats: computeCardStats(cards),
+    stats: computeCardStats(toStatsInput(cards)),
     cardsWithoutPack,
   };
 }
@@ -66,10 +72,15 @@ export async function getCollectionCards(code: string) {
 
   const cards = await prisma.card.findMany({
     where: { collectionId: collection.id },
+    include: { print: { select: { id: true, ownedQuantity: true } } },
     orderBy: { number: "asc" },
   });
 
-  return { collection, cards, stats: computeCardStats(cards) };
+  const stats = computeCardStats(
+    cards.map((card) => ({ rarity: card.rarity, ownedQuantity: card.print.ownedQuantity })),
+  );
+
+  return { collection, cards, stats };
 }
 
 export async function getPackDetail(collectionCode: string, packName: string) {
@@ -79,14 +90,20 @@ export async function getPackDetail(collectionCode: string, packName: string) {
   const pack = await prisma.pack.findUnique({
     where: { collectionId_name: { collectionId: collection.id, name: packName } },
     include: {
-      cards: { include: { card: true }, orderBy: { card: { number: "asc" } } },
+      cards: {
+        include: { card: { include: { print: { select: { id: true, ownedQuantity: true } } } } },
+        orderBy: { card: { number: "asc" } },
+      },
     },
   });
   if (!pack) return null;
 
   const cards = pack.cards.map((cp) => cp.card);
+  const stats = computeCardStats(
+    cards.map((card) => ({ rarity: card.rarity, ownedQuantity: card.print.ownedQuantity })),
+  );
 
-  return { collection, pack, cards, stats: computeCardStats(cards) };
+  return { collection, pack, cards, stats };
 }
 
 export async function getCardDetail(collectionCode: string, number: number) {
@@ -98,7 +115,17 @@ export async function getCardDetail(collectionCode: string, number: number) {
 
   const card = await prisma.card.findUnique({
     where: { collectionId_number: { collectionId: collection.id, number } },
-    include: { packs: { include: { pack: true }, orderBy: { pack: { name: "asc" } } } },
+    include: {
+      packs: { include: { pack: true }, orderBy: { pack: { name: "asc" } } },
+      print: {
+        include: {
+          cards: {
+            include: { collection: true },
+            orderBy: { collection: { releaseDate: "asc" } },
+          },
+        },
+      },
+    },
   });
   if (!card) return null;
 
@@ -106,5 +133,6 @@ export async function getCardDetail(collectionCode: string, number: number) {
     collection,
     card,
     packs: card.packs.map((cp) => cp.pack),
+    siblingCards: card.print.cards.filter((sibling) => sibling.id !== card.id),
   };
 }

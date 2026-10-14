@@ -17,7 +17,7 @@ export default async function CardPage({
   const detail = await getCardDetail(code, parsedNumber);
   if (!detail) notFound();
 
-  const { collection, card, packs } = detail;
+  const { collection, card, packs, siblingCards } = detail;
   const isPackExclusive = packs.length === 1 && collection._count.packs > 1;
 
   return (
@@ -121,6 +121,27 @@ export default async function CardPage({
             </Link>
           ))}
         </div>
+      )}
+
+      {siblingCards.length > 0 && (
+        <>
+          <h2 className="section-title">Também disponível em</h2>
+          <p className="empty-state">
+            É a mesma impressão (mesma arte) reaproveitada — marcar como possuída aqui
+            também conta nas coleções abaixo, e vice-versa.
+          </p>
+          <div className="pack-links">
+            {siblingCards.map((sibling) => (
+              <Link
+                key={sibling.id}
+                href={`/collections/${sibling.collection.code}/cards/${sibling.number}`}
+                className="pack-pill"
+              >
+                {sibling.collection.name} (#{sibling.number})
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </main>
   );

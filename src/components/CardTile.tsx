@@ -5,14 +5,16 @@ import { RARITY_CLASS, RARITY_LABEL } from "@/lib/display";
 import { cardImageUrl } from "@/lib/images";
 import { decrementOwnedQuantity, incrementOwnedQuantity } from "@/lib/actions";
 
+type CardWithPrint = Card & { print: { id: string; ownedQuantity: number } };
+
 export function CardTile({
   card,
   collectionCode,
 }: {
-  card: Card;
+  card: CardWithPrint;
   collectionCode: string;
 }) {
-  const owned = card.ownedQuantity > 0;
+  const owned = card.print.ownedQuantity > 0;
 
   return (
     <div className={`tile card-tile ${owned ? "card-tile-owned" : ""}`}>
@@ -37,7 +39,7 @@ export function CardTile({
       </Link>
 
       <div className="qty-controls">
-        <form action={decrementOwnedQuantity.bind(null, card.id)}>
+        <form action={decrementOwnedQuantity.bind(null, card.print.id)}>
           <button
             type="submit"
             className="qty-btn"
@@ -46,8 +48,8 @@ export function CardTile({
             −
           </button>
         </form>
-        <span className="qty-count">{card.ownedQuantity}</span>
-        <form action={incrementOwnedQuantity.bind(null, card.id)}>
+        <span className="qty-count">{card.print.ownedQuantity}</span>
+        <form action={incrementOwnedQuantity.bind(null, card.print.id)}>
           <button
             type="submit"
             className="qty-btn"

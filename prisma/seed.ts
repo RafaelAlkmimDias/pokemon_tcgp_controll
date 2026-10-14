@@ -124,14 +124,24 @@ async function main() {
       const stage =
         extra?.stage === undefined || extra.stage === null ? undefined : String(extra.stage);
 
+      // A print (unique artwork) can be reissued across collections - e.g. Deluxe
+      // Pack reprints. Cards sharing the same image share the same print, and
+      // therefore the same owned quantity. Never touch ownedQuantity here: it's
+      // user state, not source data.
+      const print = await prisma.print.upsert({
+        where: { imageUrl: card.image },
+        create: { imageUrl: card.image },
+        update: {},
+      });
+
       const savedCard = await prisma.card.upsert({
         where: { collectionId_number: { collectionId: collection.id, number: card.number } },
         create: {
           collectionId: collection.id,
+          printId: print.id,
           number: card.number,
           name: card.name,
           rarity: RARITY_MAP[card.rarity] ?? Rarity.UNKNOWN,
-          imageUrl: card.image,
           type,
           element: extra?.element?.toLowerCase(),
           stage,
@@ -142,9 +152,9 @@ async function main() {
           goodWith: extra?.goodWith ?? undefined,
         },
         update: {
+          printId: print.id,
           name: card.name,
           rarity: RARITY_MAP[card.rarity] ?? Rarity.UNKNOWN,
-          imageUrl: card.image,
           type,
           element: extra?.element?.toLowerCase(),
           stage,

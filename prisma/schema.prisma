@@ -60,26 +60,42 @@ enum CardType {
   TOOL
 }
 
+// A unique physical printing (artwork) of a card. The same print can be
+// reissued across multiple collections (e.g. Deluxe Pack reprints) - those
+// Card rows all point at the same Print, so marking one owned marks all of
+// them owned.
+model Print {
+  id            String   @id @default(cuid())
+  imageUrl      String   @unique
+  ownedQuantity Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  cards Card[]
+
+  @@map("prints")
+}
+
 model Card {
-  id            String    @id @default(cuid())
-  collectionId  String
-  number        Int
-  name          String
-  rarity        Rarity    @default(UNKNOWN)
-  imageUrl      String?
-  type          CardType?
-  element       String?
-  stage         String?
-  health        Int?
-  retreatCost   Int?
-  weakness      String?
-  evolvesFrom   String?
-  goodWith      Json?
-  ownedQuantity Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  collectionId String
+  printId      String
+  number       Int
+  name         String
+  rarity       Rarity    @default(UNKNOWN)
+  type         CardType?
+  element      String?
+  stage        String?
+  health       Int?
+  retreatCost  Int?
+  weakness     String?
+  evolvesFrom  String?
+  goodWith     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  print      Print      @relation(fields: [printId], references: [id])
   packs      CardPack[]
 
   @@unique([collectionId, number])

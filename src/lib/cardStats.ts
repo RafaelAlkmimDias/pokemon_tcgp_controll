@@ -1,4 +1,4 @@
-import type { Card, Rarity } from "@prisma/client";
+import type { Rarity } from "@prisma/client";
 
 // Rarities excluded from the "cartas" count, shown separately from "cartas totais".
 const RARE_ART_RARITIES = new Set<Rarity>(["AR", "SR", "SAR", "IM", "UR", "S", "SSR"]);
@@ -14,7 +14,9 @@ export type CardStats = {
   allTotal: number;
 };
 
-export function computeCardStats(cards: Pick<Card, "rarity" | "ownedQuantity">[]): CardStats {
+export function computeCardStats(
+  cards: { rarity: Rarity; ownedQuantity: number }[],
+): CardStats {
   let commonOwned = 0;
   let commonTotal = 0;
   let allOwned = 0;

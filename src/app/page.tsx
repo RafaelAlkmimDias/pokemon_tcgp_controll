@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCollections } from "@/lib/queries";
 import { formatDate } from "@/lib/display";
+import { CardCountLines } from "@/components/CardCountLines";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,8 @@ export default async function HomePage() {
                 <div className="tile-meta">
                   <span>{collection.code}</span>
                   <span>{formatDate(collection.releaseDate)}</span>
-                  <span>
-                    {collection._count.packs} pacote(s) · {collection._count.cards} cartas
-                  </span>
+                  <span>{collection._count.packs} pacote(s)</span>
+                  <CardCountLines stats={collection.stats} />
                 </div>
               </Link>
             ))}

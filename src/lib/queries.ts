@@ -2,12 +2,26 @@ import { prisma } from "@/lib/prisma";
 import { computeCardStats } from "@/lib/cardStats";
 
 export async function getCollections() {
-  return prisma.collection.findMany({
+  const collections = await prisma.collection.findMany({
     orderBy: { releaseDate: "asc" },
-    include: {
-      _count: { select: { packs: true, cards: true } },
-    },
+    include: { _count: { select: { packs: true } } },
   });
+
+  const cards = await prisma.card.findMany({
+    select: { collectionId: true, rarity: true, ownedQuantity: true },
+  });
+
+  const cardsByCollectionId = new Map<string, typeof cards>();
+  for (const card of cards) {
+    const list = cardsByCollectionId.get(card.collectionId) ?? [];
+    list.push(card);
+    cardsByCollectionId.set(card.collectionId, list);
+  }
+
+  return collections.map((collection) => ({
+    ...collection,
+    stats: computeCardStats(cardsByCollectionId.get(collection.id) ?? []),
+  }));
 }
 
 export async function getCollectionDetail(code: string) {

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# downloaded card/pack/set artwork (regenerate with `npm run download:images`)
+/public/images/

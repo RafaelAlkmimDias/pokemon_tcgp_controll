@@ -32,6 +32,20 @@ Os dados de cartas/pacotes/coleções são importados de
 para a pesquisa completa de fontes disponíveis (inclui outras bases que podem ser
 cruzadas no futuro).
 
+## Imagens
+
+As artes de cartas, pacotes e logos de coleção **não** são buscadas em tempo real na
+internet — são baixadas uma vez com `npm run download:images` (fontes:
+[`PocketDecks/pokemon-tcg-pocket-cards`](https://github.com/PocketDecks/pokemon-tcg-pocket-cards)
+para cartas e [`flibustier/pokemon-tcg-pocket-database`](https://github.com/flibustier/pokemon-tcg-pocket-database)
+para pacotes/logos) e salvas em `public/images/` (~150MB, fora do git — veja `.gitignore`).
+A partir daí a app serve tudo localmente, sem depender de internet em runtime, e as
+imagens vão junto na imagem Docker (`Dockerfile` copia `public/` inteiro).
+
+Rode `npm run download:images` depois do `npm run db:seed` (precisa do banco populado
+para saber quais cartas/pacotes/coleções existem) e sempre que surgirem coleções novas.
+O script é idempotente — pula o que já foi baixado.
+
 ## Rodando localmente
 
 1. Copie o arquivo de ambiente:
@@ -50,7 +64,11 @@ cruzadas no futuro).
    ```bash
    npm run db:seed
    ```
-5. Rode a app em modo dev:
+5. Baixe as imagens (cartas, pacotes, logos) para servir localmente:
+   ```bash
+   npm run download:images
+   ```
+6. Rode a app em modo dev:
    ```bash
    npm run dev
    ```
@@ -58,9 +76,11 @@ cruzadas no futuro).
 ## Rodando tudo via Docker
 
 ```bash
-docker compose up -d --build
-npm run db:push   # roda localmente apontando para localhost:5432 (ver .env)
+docker compose up -d db
+npm run db:push        # roda localmente apontando para localhost:5432 (ver .env)
 npm run db:seed
+npm run download:images  # precisa rodar ANTES do build: as imagens viram parte da imagem Docker
+docker compose up -d --build app
 ```
 
 Os serviços `app` e `db` no `docker-compose.yml` têm limite de **1 CPU e 512MB de
@@ -75,3 +95,4 @@ memória** cada (`mem_limit`/`cpus`, aplicados mesmo fora de modo swarm, mais o 
 - `npm run db:migrate` — cria/aplica migrations versionadas (`prisma migrate dev`)
 - `npm run db:seed` — importa coleções, pacotes e cartas da fonte de dados
 - `npm run db:generate` — gera o Prisma Client
+- `npm run download:images` — baixa as artes de cartas/pacotes/coleções para `public/images/`

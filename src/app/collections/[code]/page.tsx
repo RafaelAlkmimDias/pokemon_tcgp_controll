@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCollectionDetail } from "@/lib/queries";
 import { formatDate } from "@/lib/display";
 import { CardTile } from "@/components/CardTile";
+import { CardCountLines } from "@/components/CardCountLines";
 import { collectionLogoUrl, packImageUrl } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function CollectionPage({
 
   if (!detail) notFound();
 
-  const { collection, cardsWithoutPack } = detail;
+  const { collection, stats, cardsWithoutPack } = detail;
 
   return (
     <main className="container">
@@ -40,9 +41,9 @@ export default async function CollectionPage({
         <div>
           <h1 className="page-title">{collection.name}</h1>
           <p className="page-subtitle">
-            {collection.code} · {formatDate(collection.releaseDate)} ·{" "}
-            {collection._count.cards} cartas no total
+            {collection.code} · {formatDate(collection.releaseDate)}
           </p>
+          <CardCountLines stats={stats} className="count-lines-header" />
           <Link href={`/collections/${collection.code}/cards`} className="pack-pill">
             Ver todas as cartas da coleção
           </Link>
@@ -75,8 +76,7 @@ export default async function CollectionPage({
                 )}
                 <div className="tile-title">{pack.name}</div>
                 <div className="tile-meta">
-                  <span>{pack._count.cards} cartas</span>
-                  <span>{pack.ownedCount} diferentes que você tem</span>
+                  <CardCountLines stats={pack.stats} />
                 </div>
               </Link>
             );

@@ -94,8 +94,20 @@ a {
 
 .page-subtitle {
   color: var(--muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   font-size: 0.95rem;
+}
+
+.count-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.count-lines-header {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
 }
 
 .section-title {

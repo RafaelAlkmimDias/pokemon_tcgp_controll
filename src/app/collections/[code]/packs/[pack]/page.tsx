@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPackDetail } from "@/lib/queries";
 import { CardTile } from "@/components/CardTile";
+import { CardCountLines } from "@/components/CardCountLines";
 import { packImageUrl } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function PackPage({
 
   if (!detail) notFound();
 
-  const { collection, pack, cards, ownedCount } = detail;
+  const { collection, pack, cards, stats } = detail;
   const packImage = packImageUrl(pack.name);
 
   return (
@@ -44,10 +45,8 @@ export default async function PackPage({
         )}
         <div>
           <h1 className="page-title">Pacote {pack.name}</h1>
-          <p className="page-subtitle">
-            {collection.name} · {cards.length} cartas neste pacote · {ownedCount} diferentes
-            que você tem
-          </p>
+          <p className="page-subtitle">{collection.name}</p>
+          <CardCountLines stats={stats} className="count-lines-header" />
         </div>
       </div>
 

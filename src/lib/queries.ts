@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { computeCardStats } from "@/lib/cardStats";
 
 export async function getCollections() {
   return prisma.collection.findMany({
@@ -12,37 +13,37 @@ export async function getCollections() {
 export async function getCollectionDetail(code: string) {
   const collection = await prisma.collection.findUnique({
     where: { code },
-    include: {
-      packs: {
-        orderBy: { name: "asc" },
-        include: { _count: { select: { cards: true } } },
-      },
-      _count: { select: { cards: true } },
-    },
+    include: { packs: { orderBy: { name: "asc" } } },
   });
   if (!collection) return null;
 
-  const ownedCountByPack = await prisma.cardPack.groupBy({
-    by: ["packId"],
-    where: {
-      pack: { collectionId: collection.id },
-      card: { ownedQuantity: { gt: 0 } },
-    },
-    _count: { _all: true },
-  });
-  const ownedByPackId = new Map(ownedCountByPack.map((row) => [row.packId, row._count._all]));
-
-  const packs = collection.packs.map((pack) => ({
-    ...pack,
-    ownedCount: ownedByPackId.get(pack.id) ?? 0,
-  }));
-
-  const cardsWithoutPack = await prisma.card.findMany({
-    where: { collectionId: collection.id, packs: { none: {} } },
+  const cards = await prisma.card.findMany({
+    where: { collectionId: collection.id },
+    include: { packs: { select: { packId: true } } },
     orderBy: { number: "asc" },
   });
 
-  return { collection: { ...collection, packs }, cardsWithoutPack };
+  const cardsByPackId = new Map<string, typeof cards>();
+  const cardsWithoutPack: typeof cards = [];
+  for (const card of cards) {
+    if (card.packs.length === 0) cardsWithoutPack.push(card);
+    for (const { packId } of card.packs) {
+      const list = cardsByPackId.get(packId) ?? [];
+      list.push(card);
+      cardsByPackId.set(packId, list);
+    }
+  }
+
+  const packs = collection.packs.map((pack) => ({
+    ...pack,
+    stats: computeCardStats(cardsByPackId.get(pack.id) ?? []),
+  }));
+
+  return {
+    collection: { ...collection, packs },
+    stats: computeCardStats(cards),
+    cardsWithoutPack,
+  };
 }
 
 export async function getCollectionCards(code: string) {
@@ -54,11 +55,7 @@ export async function getCollectionCards(code: string) {
     orderBy: { number: "asc" },
   });
 
-  return {
-    collection,
-    cards,
-    ownedCount: cards.filter((card) => card.ownedQuantity > 0).length,
-  };
+  return { collection, cards, stats: computeCardStats(cards) };
 }
 
 export async function getPackDetail(collectionCode: string, packName: string) {
@@ -75,12 +72,7 @@ export async function getPackDetail(collectionCode: string, packName: string) {
 
   const cards = pack.cards.map((cp) => cp.card);
 
-  return {
-    collection,
-    pack,
-    cards,
-    ownedCount: cards.filter((card) => card.ownedQuantity > 0).length,
-  };
+  return { collection, pack, cards, stats: computeCardStats(cards) };
 }
 
 export async function getCardDetail(collectionCode: string, number: number) {

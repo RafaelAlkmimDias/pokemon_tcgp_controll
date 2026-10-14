@@ -34,11 +34,10 @@ Veja `prisma/schema.prisma` para o schema completo (`Collection`, `Pack`, `Card`
 
 ## Fonte dos dados
 
-Os dados de cartas/pacotes/coleções são importados de
-[`flibustier/pokemon-tcg-pocket-database`](https://github.com/flibustier/pokemon-tcg-pocket-database)
-(`sets.json`, `cards.json`, `cards.extra.json`). Veja `docs/pokemon-tcgp-data-sources.md`
-para a pesquisa completa de fontes disponíveis (inclui outras bases que podem ser
-cruzadas no futuro).
+Veja **`docs/data-pipeline.md`** para a referência completa: de onde vem cada dado
+(cartas, pacotes, coleções, imagens, prints, baralhos competitivos), os scripts/comandos
+exatos pra atualizar cada um, e detalhes/gotchas encontrados no caminho. `docs/pokemon-tcgp-data-sources.md`
+tem a pesquisa inicial de fontes candidatas (antes de decidir quais usar).
 
 ## Imagens
 
@@ -76,7 +75,11 @@ O script é idempotente — pula o que já foi baixado.
    ```bash
    npm run download:images
    ```
-6. Rode a app em modo dev:
+6. Importe os baralhos competitivos (meta atual):
+   ```bash
+   npm run sync:decks
+   ```
+7. Rode a app em modo dev:
    ```bash
    npm run dev
    ```
@@ -104,3 +107,4 @@ memória** cada (`mem_limit`/`cpus`, aplicados mesmo fora de modo swarm, mais o 
 - `npm run db:seed` — importa coleções, pacotes e cartas da fonte de dados
 - `npm run db:generate` — gera o Prisma Client
 - `npm run download:images` — baixa as artes de cartas/pacotes/coleções para `public/images/`
+- `npm run sync:decks` — importa/atualiza os baralhos competitivos (meta de torneios)

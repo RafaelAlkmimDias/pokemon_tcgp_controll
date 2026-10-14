@@ -173,7 +173,6 @@ export async function getDecks() {
       isBuilt: deck.isBuilt,
       elements,
       totalCards: deck.cards.length,
-      totalCopies: deck.cards.reduce((sum, deckCard) => sum + deckCard.quantity, 0),
       sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
     };
   });
@@ -201,6 +200,5 @@ export async function getDeckDetail(slug: string) {
   return {
     deck,
     sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
-    totalCopies: deck.cards.reduce((sum, deckCard) => sum + deckCard.quantity, 0),
   };
 }

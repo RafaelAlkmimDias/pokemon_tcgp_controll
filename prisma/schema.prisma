@@ -85,6 +85,10 @@ model Card {
   printId      String
   number       Int
   name         String
+  // Portuguese name, matched by internal asset ID against
+  // prisma/data/card-names-pt.json (see its README for provenance). Falls
+  // back to `name` (English) when missing. Never shown unless locale is "pt".
+  namePt       String?
   rarity       Rarity    @default(UNKNOWN)
   type         CardType?
   element      String?

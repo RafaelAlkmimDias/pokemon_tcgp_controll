@@ -12,6 +12,13 @@ function resolveCollectionName(
   return locale === "pt" ? (collection.namePt ?? collection.name) : collection.name;
 }
 
+// Card names are translated the same way (see docs/i18n-plan.md, stage 2b) -
+// `namePt` is a best-effort match against a static snapshot, so it's often
+// missing; always falls back to the English `name`.
+function resolveCardName(card: { name: string; namePt: string | null }, locale: Locale) {
+  return locale === "pt" ? (card.namePt ?? card.name) : card.name;
+}
+
 export async function getCollections(locale: Locale) {
   const collections = await prisma.collection.findMany({
     orderBy: { releaseDate: "desc" },
@@ -74,7 +81,10 @@ export async function getCollectionDetail(code: string, locale: Locale) {
   return {
     collection: { ...collection, name: resolveCollectionName(collection, locale), packs },
     stats: computeCardStats(toStatsInput(cards)),
-    cardsWithoutPack,
+    cardsWithoutPack: cardsWithoutPack.map((card) => ({
+      ...card,
+      name: resolveCardName(card, locale),
+    })),
   };
 }
 
@@ -94,7 +104,7 @@ export async function getCollectionCards(code: string, locale: Locale) {
 
   return {
     collection: { ...collection, name: resolveCollectionName(collection, locale) },
-    cards,
+    cards: cards.map((card) => ({ ...card, name: resolveCardName(card, locale) })),
     stats,
   };
 }
@@ -122,7 +132,7 @@ export async function getPackDetail(collectionCode: string, packName: string, lo
   return {
     collection: { ...collection, name: resolveCollectionName(collection, locale) },
     pack,
-    cards,
+    cards: cards.map((card) => ({ ...card, name: resolveCardName(card, locale) })),
     stats,
   };
 }
@@ -152,7 +162,7 @@ export async function getCardDetail(collectionCode: string, number: number, loca
 
   return {
     collection: { ...collection, name: resolveCollectionName(collection, locale) },
-    card,
+    card: { ...card, name: resolveCardName(card, locale) },
     packs: card.packs.map((cp) => cp.pack),
     siblingCards: card.print.cards
       .filter((sibling) => sibling.id !== card.id)
@@ -247,7 +257,7 @@ export async function getDecks() {
   });
 }
 
-export async function getDeckDetail(slug: string) {
+export async function getDeckDetail(slug: string, locale: Locale) {
   const deck = await prisma.deck.findUnique({
     where: { slug },
     include: {
@@ -274,6 +284,7 @@ export async function getDeckDetail(slug: string) {
 
   const cardsWithAvailability = deck.cards.map((deckCard) => ({
     ...deckCard,
+    card: { ...deckCard.card, name: resolveCardName(deckCard.card, locale) },
     availableQuantity: availableQuantity(deckCard, committedByOtherBuiltDecks),
   }));
 

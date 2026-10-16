@@ -108,19 +108,44 @@ implementação. O mecanismo está pronto para as outras 22 assim que a fonte pu
 mais traduções — não é necessário nenhum trabalho adicional do lado do app, só rodar
 `npm run db:seed` de novo.
 
-### 2b. Nome de cada carta — bloqueado por falta de fonte confiável
+### 2b. Nome de cada carta — concluído (fonte encontrada: pokemongohub.net)
 
-- [ ] Verificar periodicamente se `flibustier/pokemon-tcg-pocket-database` passou a
-      publicar `cards.pt.json` (ou um `cards/pt/*.json` completo e confiável — não só
-      um arquivo existente, mas de fato traduzido, como mostrou não ser o caso do
-      `fr`/`de` em 2026-10-16).
-- [ ] Caso surja uma fonte assim, mapear o nome por idioma (`CardTranslation` ou
-      campo `namePt`/`nameEn` em `cards`) e atualizar `prisma/seed.ts` para importar.
-- [ ] Enquanto não houver fonte confiável, manter o nome da carta sempre em inglês,
-      independentemente do idioma de interface escolhido — e deixar isso visível para
-      o usuário (ex. nota/indicador na tela), em vez de aparentar suporte completo.
-- [ ] **Não** implementar tradução própria para nomes de carta — fora do escopo
-      combinado com o usuário.
+O usuário apontou `https://pocket.pokemongohub.net/pt` como fonte. O site fica atrás
+de proteção anti-bot da Cloudflare (não dá pra buscar programaticamente), mas o
+usuário forneceu uma cópia salva completa da página "Todas as cartas" em
+2026-10-16, que embute o dataset inteiro (~4306 cartas) num payload RSC do
+Next.js usado para filtragem client-side — mesmo sem rolar a tela inteira.
+
+- [x] Extraído o payload (`self.__next_f.push(...)` → `initialCards`), mapeado por
+      ID interno de asset do jogo (ex. `PK_10_000010_00`, o mesmo embutido no nome
+      do arquivo de imagem que já usamos) contra o nome em português. Confirmado como
+      fonte confiável (não tradução nossa): nomes de NPC batem com localizações
+      oficiais conhecidas (ex. "Hau"→"Hibi", "Ilima"→"Luan", "Iono"→"Kissera").
+- [x] `prisma/schema.prisma`: `Card.namePt String?`, mesmo padrão de fallback do 2a.
+- [x] Dados salvos em `prisma/data/card-names-pt.json` + `prisma/data/README.md`
+      (proveniência, formato, limitações, como atualizar). **Diferente do 2a**: não é
+      uma fonte buscável ao vivo — é um snapshot estático, versionado no repo;
+      atualizar significa salvar a página de novo manualmente.
+- [x] `prisma/seed.ts` casa cada carta pelo ID de asset extraído de `card.image`, e
+      só aceita a tradução se o nome em inglês da própria fonte bater com o nosso
+      (`card.name`) — proteção contra erros pontuais na fonte.
+- [x] Mesmo com essa proteção, 2 erros pontuais passaram (o campo `pt` da fonte
+      apontava pra uma carta errada, com o campo `en` da mesma linha *correto* —
+      "Machamp" tinha `pt: Machop`, "Nidoran♀" tinha `pt: Nidoran♂"). Achados numa
+      checagem manual por amostragem, removidos à mão de `card-names-pt.json`
+      (documentado lá). Uma amostra aleatória maior depois não achou mais nenhum.
+- [x] `src/lib/queries.ts`: mesmo helper `resolveCardName` aplicado em toda função
+      que devolve carta (`getCollectionCards`, `getCollectionDetail`,
+      `getPackDetail`, `getCardDetail`, `getDeckDetail`) — zero mudança nas telas,
+      elas já liam `card.name` direto. O filtro de nome (`CardNameFilterGrid`)
+      passa a buscar pelo nome já traduzido de graça, sem nenhuma mudança própria.
+- [x] Aplicado no banco de teste e produção com consentimento explícito do usuário
+      em 2026-10-16. Cobertura real: 3791/4317 cartas (≈88%) têm `namePt`; o resto
+      cai no fallback em inglês (sets `B4`/`B4a`, muito recentes na época do
+      snapshot, mais alguns casos pontuais excluídos por segurança).
+- [x] Coberto por `e2e/collection-name-localization.spec.ts` (segundo teste no
+      arquivo) e pelos testes de integração em `src/lib/queries.integration.test.ts`
+      (`describe("card name localization")`).
 
 ### 2c. Arte da carta — fora de escopo por enquanto
 

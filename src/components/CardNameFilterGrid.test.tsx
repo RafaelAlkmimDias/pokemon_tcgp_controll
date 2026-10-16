@@ -21,6 +21,7 @@ function makeCard(id: string, number: number, name: string): Card & {
     printId: `print-${id}`,
     number,
     name,
+    namePt: null,
     rarity: "C",
     type: "POKEMON",
     element: "grass",

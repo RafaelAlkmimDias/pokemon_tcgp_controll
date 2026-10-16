@@ -38,6 +38,7 @@ export default async function globalSetup() {
     collectionId: collection.id,
     number: 2,
     name: "Charmander",
+    namePt: "Charmander PT",
     ownedQuantity: 0,
   });
   await testPrisma.cardPack.create({ data: { cardId: charmander.id, packId: pack.id } });

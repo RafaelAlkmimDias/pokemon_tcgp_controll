@@ -1,9 +1,33 @@
 import "dotenv/config";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Rarity, CardType } from "@prisma/client";
 
 const BASE_URL =
   "https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main/dist";
+
+// Static snapshot, not a live-fetched source - see prisma/data/README.md for
+// provenance, coverage, and how to refresh it. Keyed by internal asset ID;
+// each entry also carries the source's own English name (`en`), which we
+// cross-check against our own (flibustier-sourced) English name before
+// trusting `pt` - the source has occasional row-level bugs (e.g. a card's
+// `pt` name field pointing at a different, often adjacent, card) that this
+// catches even when there's no conflict in the source data itself.
+const CARD_NAMES_PT: Record<string, { pt: string; en: string | null }> = JSON.parse(
+  readFileSync(path.join(import.meta.dirname, "data", "card-names-pt.json"), "utf-8"),
+);
+
+const ASSET_ID_RE = /(PK|TR)_\d+_\d+_\d+/;
+
+function resolveCardNamePt(image: string, englishName: string): string | null {
+  const match = image.match(ASSET_ID_RE);
+  if (!match) return null;
+  const entry = CARD_NAMES_PT[match[0]];
+  if (!entry) return null;
+  if (entry.en && entry.en !== englishName) return null;
+  return entry.pt;
+}
 
 type RawSet = {
   code: string;
@@ -143,6 +167,7 @@ async function main() {
           printId: print.id,
           number: card.number,
           name: card.name,
+          namePt: resolveCardNamePt(card.image, card.name),
           rarity: RARITY_MAP[card.rarity] ?? Rarity.UNKNOWN,
           type,
           element: extra?.element?.toLowerCase(),
@@ -156,6 +181,7 @@ async function main() {
         update: {
           printId: print.id,
           name: card.name,
+          namePt: resolveCardNamePt(card.image, card.name),
           rarity: RARITY_MAP[card.rarity] ?? Rarity.UNKNOWN,
           type,
           element: extra?.element?.toLowerCase(),

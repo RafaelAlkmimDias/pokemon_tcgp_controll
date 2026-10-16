@@ -104,6 +104,55 @@ describe("collection name localization", () => {
   });
 });
 
+describe("card name localization", () => {
+  it("resolves the Portuguese card name consistently across every query that returns one", async () => {
+    const collection = await createCollection({ code: "A1" });
+    const pack = await createPack({ collectionId: collection.id, name: "Mewtwo" });
+    const { card } = await createCardWithPrint({
+      collectionId: collection.id,
+      number: 1,
+      name: "Bulbasaur",
+      namePt: "Bulbassauro",
+    });
+    await testPrisma.cardPack.create({ data: { cardId: card.id, packId: pack.id } });
+
+    expect((await getCollectionCards("A1", "pt"))?.cards[0].name).toBe("Bulbassauro");
+    expect((await getCollectionCards("A1", "en"))?.cards[0].name).toBe("Bulbasaur");
+    expect((await getPackDetail("A1", "Mewtwo", "pt"))?.cards[0].name).toBe("Bulbassauro");
+    expect((await getCardDetail("A1", 1, "pt"))?.card.name).toBe("Bulbassauro");
+
+    const deck = await createDeck({ slug: "deck-a" });
+    await createDeckCard({ deckId: deck.id, cardId: card.id, quantity: 1 });
+    const deckDetail = await getDeckDetail("deck-a", "pt");
+    expect(deckDetail?.deck.cards[0].card.name).toBe("Bulbassauro");
+  });
+
+  it("falls back to the English name when there's no Portuguese translation", async () => {
+    const collection = await createCollection({ code: "A1" });
+    await createCardWithPrint({
+      collectionId: collection.id,
+      number: 1,
+      name: "Bulbasaur",
+      namePt: null,
+    });
+
+    expect((await getCollectionCards("A1", "pt"))?.cards[0].name).toBe("Bulbasaur");
+  });
+
+  it("lists cards without a pack with their resolved name too", async () => {
+    const collection = await createCollection({ code: "A1" });
+    await createCardWithPrint({
+      collectionId: collection.id,
+      number: 1,
+      name: "Bulbasaur",
+      namePt: "Bulbassauro",
+    });
+
+    const detail = await getCollectionDetail("A1", "pt");
+    expect(detail?.cardsWithoutPack[0].name).toBe("Bulbassauro");
+  });
+});
+
 describe("getCollectionDetail", () => {
   it("groups card stats by pack and lists cards without a pack separately", async () => {
     const collection = await createCollection({ code: "A1" });
@@ -213,11 +262,11 @@ describe("getDecks / getDeckDetail - card availability across built decks", () =
     expect(otherSummary?.sufficientCount).toBe(0);
     expect(otherSummary?.totalCards).toBe(1);
 
-    const otherDetail = await getDeckDetail("other-deck");
+    const otherDetail = await getDeckDetail("other-deck", "pt");
     expect(otherDetail?.sufficientCount).toBe(0);
     expect(otherDetail?.deck.cards[0].availableQuantity).toBe(0);
 
-    const builtDetail = await getDeckDetail("built-deck");
+    const builtDetail = await getDeckDetail("built-deck", "pt");
     expect(builtDetail?.sufficientCount).toBe(1);
     expect(builtDetail?.deck.cards[0].availableQuantity).toBe(print.ownedQuantity);
   });
@@ -256,6 +305,6 @@ describe("getDecks / getDeckDetail - card availability across built decks", () =
   });
 
   it("getDeckDetail returns null for an unknown slug", async () => {
-    expect(await getDeckDetail("does-not-exist")).toBeNull();
+    expect(await getDeckDetail("does-not-exist", "pt")).toBeNull();
   });
 });

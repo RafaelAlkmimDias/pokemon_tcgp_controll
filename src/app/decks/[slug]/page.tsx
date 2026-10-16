@@ -14,7 +14,7 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
   const t = getDictionary(locale);
   const { slug: slugParam } = await params;
   const slug = decodeURIComponent(slugParam);
-  const detail = await getDeckDetail(slug);
+  const detail = await getDeckDetail(slug, locale);
 
   if (!detail) notFound();
 

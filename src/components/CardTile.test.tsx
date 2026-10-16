@@ -21,6 +21,7 @@ function makeCard(overrides: Partial<CardWithPrint> = {}): CardWithPrint {
     printId: "print-1",
     number: 7,
     name: "Bulbasaur",
+    namePt: null,
     rarity: "C",
     type: "POKEMON",
     element: "grass",

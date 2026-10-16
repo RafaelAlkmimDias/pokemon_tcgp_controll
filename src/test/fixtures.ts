@@ -36,6 +36,7 @@ export function createCard(overrides: {
   printId: string;
   number: number;
   name?: string;
+  namePt?: string | null;
   rarity?: Rarity;
   type?: CardType;
   element?: string;
@@ -46,6 +47,7 @@ export function createCard(overrides: {
       printId: overrides.printId,
       number: overrides.number,
       name: overrides.name ?? `Card ${overrides.number}`,
+      namePt: overrides.namePt,
       rarity: overrides.rarity ?? "C",
       type: overrides.type,
       element: overrides.element,
@@ -94,6 +96,7 @@ export async function createCardWithPrint(overrides: {
   collectionId: string;
   number: number;
   name?: string;
+  namePt?: string | null;
   rarity?: Rarity;
   ownedQuantity?: number;
 }) {
@@ -103,6 +106,7 @@ export async function createCardWithPrint(overrides: {
     printId: print.id,
     number: overrides.number,
     name: overrides.name,
+    namePt: overrides.namePt,
     rarity: overrides.rarity,
   });
   return { card, print };

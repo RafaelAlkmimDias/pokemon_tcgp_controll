@@ -17,7 +17,7 @@ export default async function PackPage({
   const t = getDictionary(locale);
   const { code, pack: packParam } = await params;
   const packName = decodeURIComponent(packParam);
-  const detail = await getPackDetail(code, packName);
+  const detail = await getPackDetail(code, packName, locale);
 
   if (!detail) notFound();
 

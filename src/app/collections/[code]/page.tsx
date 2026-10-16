@@ -17,7 +17,7 @@ export default async function CollectionPage({
   const locale = await getLocale();
   const t = getDictionary(locale);
   const { code } = await params;
-  const detail = await getCollectionDetail(code);
+  const detail = await getCollectionDetail(code, locale);
 
   if (!detail) notFound();
 

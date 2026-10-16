@@ -20,6 +20,7 @@ export default async function globalSetup() {
   const collection = await createCollection({
     code: "E2E1",
     name: "E2E Set",
+    namePt: "Conjunto E2E",
     releaseDate: new Date("2026-01-01"),
   });
   const pack = await createPack({ collectionId: collection.id, name: "Test Pack" });

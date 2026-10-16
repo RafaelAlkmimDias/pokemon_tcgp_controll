@@ -81,20 +81,32 @@ títulos, rótulos de raridade/elemento/tipo) **sem mexer nos dados das cartas**
 
 ## Etapa 2 — Idioma das cartas
 
-### 2a. Nome da coleção/set — viável agora, sem nova fonte de dados
+### 2a. Nome da coleção/set — concluído
 
-- [ ] Alterar `prisma/schema.prisma`: `Collection` passa a guardar nome em mais de um
-      idioma (ex. `name` continua sendo o nome "canônico" e soma-se `namePt`, ou criar
-      uma tabela `CollectionTranslation(collectionId, locale, name)` — registrar aqui
-      a opção escolhida).
-- [ ] Atualizar `prisma/seed.ts` para gravar `rawSet.name.en` **e** `rawSet.name.pt`
-      (o JSON de `sets.json` já traz os dois).
-- [ ] Rodar `npm run db:seed` para popular os nomes traduzidos nas coleções já
-      existentes no banco.
-- [ ] Atualizar `src/lib/queries.ts` para devolver o nome da coleção de acordo com o
-      idioma ativo (com fallback para inglês se faltar tradução).
-- [ ] Atualizar as telas que exibem `collection.name` para refletir o idioma
-      selecionado na Etapa 1.
+- [x] Alterado `prisma/schema.prisma`: `Collection.name` continua o nome "canônico"
+      (inglês), e foi adicionado `namePt String?` (nullable, com fallback para `name`
+      quando ausente). Preferido a uma tabela `CollectionTranslation` separada por
+      serem só 2 idiomas e um campo a mais já resolver sem over-engineering.
+- [x] Atualizado `prisma/seed.ts` para gravar `rawSet.name.en` **e** `rawSet.name.pt`.
+- [x] Rodado `npx prisma db push` (schema) e `npm run db:seed` (dados) contra o banco
+      de produção, com consentimento explícito do usuário em 2026-10-16 — ambos
+      passam pelo bloqueio de ação perigosa do próprio Prisma para agentes de IA.
+      Resultado: só `A1` e `A1a` têm `namePt` hoje (são as únicas com tradução pt na
+      fonte `sets.json` atualmente — ver nota abaixo); as outras 22 coleções caem no
+      fallback em inglês até a fonte publicar mais traduções.
+- [x] `src/lib/queries.ts` resolve o nome certo por idioma em toda função que devolve
+      uma coleção (`getCollections`, `getCollectionDetail`, `getCollectionCards`,
+      `getPackDetail`, `getCardDetail` — incluindo o nome da coleção de cada carta
+      "irmã"/reimpressão).
+- [x] Telas que exibem `collection.name` não precisaram de alteração própria: já
+      liam `collection.name` direto, e a resolução por idioma acontece antes, na
+      query. Coberto por `e2e/collection-name-localization.spec.ts`.
+
+**Nota sobre cobertura da tradução:** a fonte (`flibustier/pokemon-tcg-pocket-database`,
+`sets.json`) só tem `pt` preenchido para 2 das 24 coleções no momento desta
+implementação. O mecanismo está pronto para as outras 22 assim que a fonte publicar
+mais traduções — não é necessário nenhum trabalho adicional do lado do app, só rodar
+`npm run db:seed` de novo.
 
 ### 2b. Nome de cada carta — bloqueado por falta de fonte confiável
 

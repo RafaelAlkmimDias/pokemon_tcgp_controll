@@ -18,7 +18,7 @@ export default async function CardPage({
   const parsedNumber = Number(number);
   if (Number.isNaN(parsedNumber)) notFound();
 
-  const detail = await getCardDetail(code, parsedNumber);
+  const detail = await getCardDetail(code, parsedNumber, locale);
   if (!detail) notFound();
 
   const { collection, card, packs, siblingCards } = detail;

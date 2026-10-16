@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const locale = await getLocale();
   const t = getDictionary(locale);
-  const collections = await getCollections();
+  const collections = await getCollections(locale);
 
   const bySeries = new Map<string, typeof collections>();
   for (const collection of collections) {

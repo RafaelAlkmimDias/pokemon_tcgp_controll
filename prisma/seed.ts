@@ -96,12 +96,14 @@ async function main() {
       create: {
         code: rawSet.code,
         name: rawSet.name.en ?? rawSet.code,
+        namePt: rawSet.name.pt ?? null,
         series,
         releaseDate: new Date(rawSet.releaseDate),
         cardCount: rawSet.count,
       },
       update: {
         name: rawSet.name.en ?? rawSet.code,
+        namePt: rawSet.name.pt ?? null,
         releaseDate: new Date(rawSet.releaseDate),
         cardCount: rawSet.count,
       },

@@ -10,6 +10,9 @@ model Collection {
   id          String    @id @default(cuid())
   code        String    @unique
   name        String
+  // Portuguese name, from the same source as `name` (sets.json). Falls back
+  // to `name` (English) when missing. Never shown unless locale is "pt".
+  namePt      String?
   series      String
   releaseDate DateTime?
   cardCount   Int?

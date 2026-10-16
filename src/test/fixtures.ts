@@ -6,6 +6,7 @@ let printCounter = 0;
 export function createCollection(overrides: {
   code: string;
   name?: string;
+  namePt?: string | null;
   series?: string;
   releaseDate?: Date;
 }) {
@@ -13,6 +14,7 @@ export function createCollection(overrides: {
     data: {
       code: overrides.code,
       name: overrides.name ?? overrides.code,
+      namePt: overrides.namePt,
       series: overrides.series ?? overrides.code[0],
       releaseDate: overrides.releaseDate,
     },

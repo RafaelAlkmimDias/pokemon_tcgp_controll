@@ -1,7 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { computeCardStats } from "@/lib/cardStats";
+import type { Locale } from "@/lib/i18n/locale";
 
-export async function getCollections() {
+// Collection names are only translated to Portuguese so far (see
+// docs/i18n-plan.md, stage 2a) - English is the canonical `name`, with
+// `namePt` as an optional override, falling back to `name` when missing.
+function resolveCollectionName(
+  collection: { name: string; namePt: string | null },
+  locale: Locale,
+) {
+  return locale === "pt" ? (collection.namePt ?? collection.name) : collection.name;
+}
+
+export async function getCollections(locale: Locale) {
   const collections = await prisma.collection.findMany({
     orderBy: { releaseDate: "desc" },
     include: { _count: { select: { packs: true } } },
@@ -20,11 +31,12 @@ export async function getCollections() {
 
   return collections.map((collection) => ({
     ...collection,
+    name: resolveCollectionName(collection, locale),
     stats: computeCardStats(cardsByCollectionId.get(collection.id) ?? []),
   }));
 }
 
-export async function getCollectionDetail(code: string) {
+export async function getCollectionDetail(code: string, locale: Locale) {
   const collection = await prisma.collection.findUnique({
     where: { code },
     include: { packs: { orderBy: { name: "asc" } } },
@@ -60,13 +72,13 @@ export async function getCollectionDetail(code: string) {
   }));
 
   return {
-    collection: { ...collection, packs },
+    collection: { ...collection, name: resolveCollectionName(collection, locale), packs },
     stats: computeCardStats(toStatsInput(cards)),
     cardsWithoutPack,
   };
 }
 
-export async function getCollectionCards(code: string) {
+export async function getCollectionCards(code: string, locale: Locale) {
   const collection = await prisma.collection.findUnique({ where: { code } });
   if (!collection) return null;
 
@@ -80,10 +92,14 @@ export async function getCollectionCards(code: string) {
     cards.map((card) => ({ rarity: card.rarity, ownedQuantity: card.print.ownedQuantity })),
   );
 
-  return { collection, cards, stats };
+  return {
+    collection: { ...collection, name: resolveCollectionName(collection, locale) },
+    cards,
+    stats,
+  };
 }
 
-export async function getPackDetail(collectionCode: string, packName: string) {
+export async function getPackDetail(collectionCode: string, packName: string, locale: Locale) {
   const collection = await prisma.collection.findUnique({ where: { code: collectionCode } });
   if (!collection) return null;
 
@@ -103,10 +119,15 @@ export async function getPackDetail(collectionCode: string, packName: string) {
     cards.map((card) => ({ rarity: card.rarity, ownedQuantity: card.print.ownedQuantity })),
   );
 
-  return { collection, pack, cards, stats };
+  return {
+    collection: { ...collection, name: resolveCollectionName(collection, locale) },
+    pack,
+    cards,
+    stats,
+  };
 }
 
-export async function getCardDetail(collectionCode: string, number: number) {
+export async function getCardDetail(collectionCode: string, number: number, locale: Locale) {
   const collection = await prisma.collection.findUnique({
     where: { code: collectionCode },
     include: { _count: { select: { packs: true } } },
@@ -130,10 +151,15 @@ export async function getCardDetail(collectionCode: string, number: number) {
   if (!card) return null;
 
   return {
-    collection,
+    collection: { ...collection, name: resolveCollectionName(collection, locale) },
     card,
     packs: card.packs.map((cp) => cp.pack),
-    siblingCards: card.print.cards.filter((sibling) => sibling.id !== card.id),
+    siblingCards: card.print.cards
+      .filter((sibling) => sibling.id !== card.id)
+      .map((sibling) => ({
+        ...sibling,
+        collection: { ...sibling.collection, name: resolveCollectionName(sibling.collection, locale) },
+      })),
   };
 }
 

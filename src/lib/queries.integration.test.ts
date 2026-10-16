@@ -40,11 +40,67 @@ describe("getCollections", () => {
     await createCardWithPrint({ collectionId: older.id, number: 1, ownedQuantity: 1 });
     await createCardWithPrint({ collectionId: newer.id, number: 1, ownedQuantity: 0 });
 
-    const collections = await getCollections();
+    const collections = await getCollections("pt");
 
     expect(collections.map((c) => c.code)).toEqual(["NEW", "OLD"]);
     expect(collections.find((c) => c.code === "OLD")?.stats.allOwned).toBe(1);
     expect(collections.find((c) => c.code === "NEW")?.stats.allOwned).toBe(0);
+  });
+});
+
+describe("collection name localization", () => {
+  it("shows the Portuguese name for the pt locale, and English for en", async () => {
+    await createCollection({ code: "A1", name: "Genetic Apex", namePt: "Dominação Genética" });
+
+    const ptCollections = await getCollections("pt");
+    const enCollections = await getCollections("en");
+
+    expect(ptCollections[0].name).toBe("Dominação Genética");
+    expect(enCollections[0].name).toBe("Genetic Apex");
+  });
+
+  it("falls back to the English name in pt when no translation exists", async () => {
+    await createCollection({ code: "A1", name: "Genetic Apex", namePt: null });
+
+    const ptCollections = await getCollections("pt");
+
+    expect(ptCollections[0].name).toBe("Genetic Apex");
+  });
+
+  it("resolves the collection name consistently across every query that returns it", async () => {
+    const collection = await createCollection({
+      code: "A1",
+      name: "Genetic Apex",
+      namePt: "Dominação Genética",
+    });
+    const pack = await createPack({ collectionId: collection.id, name: "Mewtwo" });
+    const print = await createPrint({ ownedQuantity: 1 });
+    const card = await createCard({ collectionId: collection.id, printId: print.id, number: 1 });
+    await testPrisma.cardPack.create({ data: { cardId: card.id, packId: pack.id } });
+
+    expect((await getCollectionDetail("A1", "pt"))?.collection.name).toBe("Dominação Genética");
+    expect((await getCollectionCards("A1", "pt"))?.collection.name).toBe("Dominação Genética");
+    expect((await getPackDetail("A1", "Mewtwo", "pt"))?.collection.name).toBe("Dominação Genética");
+    expect((await getCardDetail("A1", 1, "pt"))?.collection.name).toBe("Dominação Genética");
+  });
+
+  it("resolves sibling cards' collection names too", async () => {
+    const collectionA = await createCollection({
+      code: "A1",
+      name: "Genetic Apex",
+      namePt: "Dominação Genética",
+    });
+    const collectionB = await createCollection({
+      code: "A1a",
+      name: "Mythical Island",
+      namePt: "Ilha Mítica",
+    });
+    const print = await createPrint({ ownedQuantity: 1 });
+    await createCard({ collectionId: collectionA.id, printId: print.id, number: 1 });
+    await createCard({ collectionId: collectionB.id, printId: print.id, number: 5 });
+
+    const detail = await getCardDetail("A1", 1, "pt");
+    expect(detail?.siblingCards[0].collection.name).toBe("Ilha Mítica");
   });
 });
 
@@ -62,7 +118,7 @@ describe("getCollectionDetail", () => {
 
     await createCardWithPrint({ collectionId: collection.id, number: 2, ownedQuantity: 0 });
 
-    const detail = await getCollectionDetail("A1");
+    const detail = await getCollectionDetail("A1", "pt");
 
     expect(detail?.collection.packs).toHaveLength(1);
     expect(detail?.collection.packs[0].stats.allTotal).toBe(1);
@@ -72,7 +128,7 @@ describe("getCollectionDetail", () => {
   });
 
   it("returns null for an unknown collection code", async () => {
-    expect(await getCollectionDetail("DOES-NOT-EXIST")).toBeNull();
+    expect(await getCollectionDetail("DOES-NOT-EXIST", "pt")).toBeNull();
   });
 });
 
@@ -82,7 +138,7 @@ describe("getCollectionCards", () => {
     await createCardWithPrint({ collectionId: collection.id, number: 2, ownedQuantity: 1 });
     await createCardWithPrint({ collectionId: collection.id, number: 1, ownedQuantity: 0 });
 
-    const detail = await getCollectionCards("A1");
+    const detail = await getCollectionCards("A1", "pt");
 
     expect(detail?.cards.map((c) => c.number)).toEqual([1, 2]);
     expect(detail?.stats.allTotal).toBe(2);
@@ -105,7 +161,7 @@ describe("getPackDetail", () => {
     });
     await testPrisma.cardPack.create({ data: { cardId: inOtherPack.id, packId: otherPack.id } });
 
-    const detail = await getPackDetail("A1", "Mewtwo");
+    const detail = await getPackDetail("A1", "Mewtwo", "pt");
 
     expect(detail?.cards.map((c) => c.number)).toEqual([1]);
   });
@@ -124,7 +180,7 @@ describe("getCardDetail", () => {
       number: 5,
     });
 
-    const detail = await getCardDetail("A1", 1);
+    const detail = await getCardDetail("A1", 1, "pt");
 
     expect(detail?.card.id).toBe(card.id);
     expect(detail?.siblingCards.map((c) => c.id)).toEqual([reprint.id]);

@@ -28,6 +28,10 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 function sortValue(deck: DeckSummary, key: SortKey): number {
+  if (key === "sufficientCount") {
+    // Compare completion ratio, not raw count, so e.g. 13/13 outranks 14/15.
+    return deck.totalCards === 0 ? 0 : deck.sufficientCount / deck.totalCards;
+  }
   const value = deck[key];
   // Nulls (decks without enough data for a score) always sort last.
   return value === null ? -Infinity : value;

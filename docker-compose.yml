@@ -28,6 +28,31 @@ services:
           cpus: "0.25"
           memory: 128M
 
+  # Isolated database used ONLY by the automated test suite (`npm test`).
+  # Separate container, separate port, separate (tmpfs, non-persistent) storage -
+  # completely independent from the `db` service above, which holds real user data.
+  # Only starts when explicitly requested (`docker compose --profile test up -d db_test`),
+  # never as part of a plain `docker compose up`.
+  db_test:
+    image: postgres:17-alpine
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: pokemon_tcgp_test
+      POSTGRES_PASSWORD: pokemon_tcgp_test
+      POSTGRES_DB: pokemon_tcgp_test
+    ports:
+      - "5434:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pokemon_tcgp_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    mem_limit: 256m
+    mem_reservation: 64m
+    cpus: "0.5"
+
   app:
     build:
       context: .

@@ -137,8 +137,37 @@ export async function getCardDetail(collectionCode: string, number: number) {
   };
 }
 
-function isDeckCardSufficient(deckCard: { quantity: number; card: { print: { ownedQuantity: number } } }) {
-  return deckCard.card.print.ownedQuantity >= deckCard.quantity;
+// The same physical card can't be used in more than one built deck at once,
+// so a print already committed to another built deck isn't available here.
+function sumQuantityByPrint(deckCards: { quantity: number; card: { printId: string } }[]) {
+  const totals = new Map<string, number>();
+  for (const deckCard of deckCards) {
+    totals.set(deckCard.card.printId, (totals.get(deckCard.card.printId) ?? 0) + deckCard.quantity);
+  }
+  return totals;
+}
+
+function subtractQuantities(totals: Map<string, number>, toSubtract: Map<string, number>) {
+  const result = new Map(totals);
+  for (const [printId, quantity] of toSubtract) {
+    result.set(printId, (result.get(printId) ?? 0) - quantity);
+  }
+  return result;
+}
+
+function availableQuantity(
+  deckCard: { card: { printId: string; print: { ownedQuantity: number } } },
+  committedByOtherBuiltDecks: Map<string, number>,
+) {
+  const committed = committedByOtherBuiltDecks.get(deckCard.card.printId) ?? 0;
+  return Math.max(0, deckCard.card.print.ownedQuantity - committed);
+}
+
+function isDeckCardSufficient(
+  deckCard: { quantity: number; card: { printId: string; print: { ownedQuantity: number } } },
+  committedByOtherBuiltDecks: Map<string, number>,
+) {
+  return availableQuantity(deckCard, committedByOtherBuiltDecks) >= deckCard.quantity;
 }
 
 export async function getDecks() {
@@ -147,11 +176,17 @@ export async function getDecks() {
     include: {
       cards: {
         include: {
-          card: { select: { element: true, print: { select: { ownedQuantity: true } } } },
+          card: {
+            select: { element: true, printId: true, print: { select: { ownedQuantity: true } } },
+          },
         },
       },
     },
   });
+
+  const committedByAllBuiltDecks = sumQuantityByPrint(
+    decks.filter((deck) => deck.isBuilt).flatMap((deck) => deck.cards),
+  );
 
   return decks.map((deck) => {
     const elements = [
@@ -161,6 +196,12 @@ export async function getDecks() {
           .filter((element): element is string => Boolean(element)),
       ),
     ].sort();
+
+    // Exclude this deck's own commitment from the "committed by others" total,
+    // since a built deck shouldn't be penalized for having claimed its own cards.
+    const committedByOtherBuiltDecks = deck.isBuilt
+      ? subtractQuantities(committedByAllBuiltDecks, sumQuantityByPrint(deck.cards))
+      : committedByAllBuiltDecks;
 
     return {
       id: deck.id,
@@ -173,7 +214,9 @@ export async function getDecks() {
       isBuilt: deck.isBuilt,
       elements,
       totalCards: deck.cards.length,
-      sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
+      sufficientCount: deck.cards.filter((deckCard) =>
+        isDeckCardSufficient(deckCard, committedByOtherBuiltDecks),
+      ).length,
     };
   });
 }
@@ -197,8 +240,21 @@ export async function getDeckDetail(slug: string) {
   });
   if (!deck) return null;
 
+  const otherBuiltDeckCards = await prisma.deckCard.findMany({
+    where: { deck: { isBuilt: true, id: { not: deck.id } } },
+    select: { quantity: true, card: { select: { printId: true } } },
+  });
+  const committedByOtherBuiltDecks = sumQuantityByPrint(otherBuiltDeckCards);
+
+  const cardsWithAvailability = deck.cards.map((deckCard) => ({
+    ...deckCard,
+    availableQuantity: availableQuantity(deckCard, committedByOtherBuiltDecks),
+  }));
+
   return {
-    deck,
-    sufficientCount: deck.cards.filter(isDeckCardSufficient).length,
+    deck: { ...deck, cards: cardsWithAvailability },
+    sufficientCount: cardsWithAvailability.filter(
+      (deckCard) => deckCard.availableQuantity >= deckCard.quantity,
+    ).length,
   };
 }

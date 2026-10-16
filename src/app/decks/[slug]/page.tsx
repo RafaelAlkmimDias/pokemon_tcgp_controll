@@ -59,6 +59,7 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
             card={deckCard.card}
             collectionCode={deckCard.card.collection.code}
             neededQuantity={deckCard.quantity}
+            availableQuantity={deckCard.availableQuantity}
           />
         ))}
       </div>

@@ -11,14 +11,19 @@ export function CardTile({
   card,
   collectionCode,
   neededQuantity,
+  availableQuantity,
 }: {
   card: CardWithPrint;
   collectionCode: string;
   /** When set, shows "possui/precisa" instead of just the owned count, and
    * tints the tile green only once the owned amount meets this quantity. */
   neededQuantity?: number;
+  /** Overrides the owned count used for display/tinting, e.g. to exclude
+   * copies already committed to other built decks. Defaults to the raw
+   * owned quantity. */
+  availableQuantity?: number;
 }) {
-  const owned = card.print.ownedQuantity;
+  const owned = availableQuantity ?? card.print.ownedQuantity;
   const hasEnough = neededQuantity === undefined ? owned > 0 : owned >= neededQuantity;
 
   let toneClass = "";

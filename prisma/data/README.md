@@ -1,29 +1,54 @@
-# `card-names-pt.json`
+# `card-names-pt.json` / `collection-names-pt.json` / `pack-names-pt.json`
 
-Portuguese card names for Pokémon TCG Pocket, keyed by the internal game asset
-ID (e.g. `PK_10_000010_00`) — the same ID embedded in each card's image
-filename (`Print.imageUrl`, e.g. `cPK_10_000010_00_FUSHIGIDANE_C.webp`).
+Portuguese names for Pokémon TCG Pocket cards and collections (sets), both
+extracted from the same source/snapshot described below.
+
+- `card-names-pt.json` is keyed by the internal game asset ID (e.g.
+  `PK_10_000010_00`) — the same ID embedded in each card's image filename
+  (`Print.imageUrl`, e.g. `cPK_10_000010_00_FUSHIGIDANE_C.webp`).
+- `collection-names-pt.json` is keyed by collection code, uppercased (e.g.
+  `A1A`, `B4B`). It covers all 24 sets, unlike `sets.json`'s own `pt` field
+  (stage 2a's source), which only had 2 of 24 translated at the time - so
+  `prisma/seed.ts` prefers this file for collection names and only falls back
+  to `sets.json`'s `pt` field when a code is missing here. The two promo
+  "sets" (`PROMO-A`/`PROMO-B`) are excluded: the source's `pt` value for them
+  was just the code echoed back, not an actual translation.
+- `pack-names-pt.json` is a small, hand-curated `{ "<English pack name>": "<pt name>" }`
+  map - **not** extracted from the pokemongohub snapshot. Most pack names are
+  Pokémon species names (unchanged between locales), so a full extraction
+  wasn't worth it; instead this covers only the handful of packs where a
+  reliable translation was already available from data we'd already imported:
+  6 packs whose name exactly matches a full collection English name (so they
+  reuse that collection's already-verified `namePt`, e.g. "Crimson Blaze" →
+  "Chama Carmesim"), plus "Team Rocket" → "Equipe Rocket" (derived from the
+  card "Team Rocket Grunt" → "Recruta da Equipe Rocket", the same phrase
+  appearing in the B4a collection name translation too). Everything else
+  falls back to English - correctly, for species-name packs.
 
 ## Provenance
 
 Extracted on 2026-10-16 from a complete, saved copy of
 `https://pocket.pokemongohub.net/pt/cards` (the "Todas as cartas" listing),
 provided by the user. That page embeds its full card dataset (all ~4306
-cards) as a Next.js RSC flight payload for client-side filtering - even
-though only a fraction renders as DOM at any scroll position, the full
-dataset ships with the page. The `name` field in that payload is the
-Portuguese-localized card name; `image_id` is this same internal asset ID
-(e.g. `a3/PK_10_013070_00`).
+cards) **and** the full list of sets with their Portuguese names, as a
+Next.js RSC flight payload used for client-side filtering - even though only
+a fraction of cards render as DOM at any scroll position, the full dataset
+ships with the page regardless. The `name` field per card is the
+Portuguese-localized card name; `image_id` is the internal asset ID (e.g.
+`a3/PK_10_013070_00`). The sets list is a separate, smaller flight chunk with
+`{ code, name }` pairs directly.
 
 This is treated as a reliable (not self-translated) source: it's structured
-per-card data served by the site itself, and spot-checks against known
-official localizations (e.g. NPC name "Hau" → "Hibi", matching the real
+per-card/per-set data served by the site itself, and spot-checks against
+known official localizations (e.g. NPC name "Hau" → "Hibi", matching the real
 Pokémon Sun/Moon Brazilian Portuguese localization) confirm it's genuine
 in-game/official text, not community guesswork.
 
 ## Format
 
-Each entry is `{ "pt": "<localized name>", "en": "<source's own English name>" }`.
+`collection-names-pt.json` is a flat `{ "<CODE>": "<pt name>" }` map.
+
+`card-names-pt.json` entries are `{ "pt": "<localized name>", "en": "<source's own English name>" }`.
 `en` isn't displayed anywhere - `prisma/seed.ts` compares it against our own
 (flibustier-sourced) English `card.name` before trusting `pt`, and skips the
 entry entirely on a mismatch. This exists because the source has occasional

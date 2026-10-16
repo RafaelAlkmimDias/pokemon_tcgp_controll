@@ -91,9 +91,13 @@ títulos, rótulos de raridade/elemento/tipo) **sem mexer nos dados das cartas**
 - [x] Rodado `npx prisma db push` (schema) e `npm run db:seed` (dados) contra o banco
       de produção, com consentimento explícito do usuário em 2026-10-16 — ambos
       passam pelo bloqueio de ação perigosa do próprio Prisma para agentes de IA.
-      Resultado: só `A1` e `A1a` têm `namePt` hoje (são as únicas com tradução pt na
-      fonte `sets.json` atualmente — ver nota abaixo); as outras 22 coleções caem no
-      fallback em inglês até a fonte publicar mais traduções.
+      Inicialmente `sets.json` só tinha `pt` para 2 das 24 coleções — **atualizado
+      depois** (mesma sessão) para usar `prisma/data/collection-names-pt.json`,
+      extraído do mesmo snapshot do pokemongohub.net usado na 2b, que cobre as 24
+      (`prisma/seed.ts` prefere esse arquivo e só cai para o `pt` do `sets.json` se
+      faltar o código). Hoje 22/24 coleções têm `namePt` real (só os 2 sets promo,
+      `PROMO-A`/`PROMO-B`, ficam em inglês — a fonte não tem nome traduzido pra eles,
+      só ecoa o código).
 - [x] `src/lib/queries.ts` resolve o nome certo por idioma em toda função que devolve
       uma coleção (`getCollections`, `getCollectionDetail`, `getCollectionCards`,
       `getPackDetail`, `getCardDetail` — incluindo o nome da coleção de cada carta
@@ -102,11 +106,33 @@ títulos, rótulos de raridade/elemento/tipo) **sem mexer nos dados das cartas**
       liam `collection.name` direto, e a resolução por idioma acontece antes, na
       query. Coberto por `e2e/collection-name-localization.spec.ts`.
 
-**Nota sobre cobertura da tradução:** a fonte (`flibustier/pokemon-tcg-pocket-database`,
-`sets.json`) só tem `pt` preenchido para 2 das 24 coleções no momento desta
-implementação. O mecanismo está pronto para as outras 22 assim que a fonte publicar
-mais traduções — não é necessário nenhum trabalho adicional do lado do app, só rodar
-`npm run db:seed` de novo.
+**Nota sobre cobertura da tradução:** ver a nota de proveniência em
+`prisma/data/README.md` — `collection-names-pt.json` (pokemongohub.net) é a fonte
+primária (22/24), `sets.json`'s `pt` fica como fallback secundário caso falte algum
+código ali.
+
+### 2d. Nome de pacote (dentro de uma coleção) — concluído, cobertura parcial e intencional
+
+A maioria dos 56 nomes de pacote distintos é nome de espécie Pokémon (ex:
+"Charizard", "Mewtwo"), que não muda entre os idiomas — então uma extração completa
+não valia o esforço. Em vez disso:
+
+- [x] `prisma/schema.prisma`: `Pack.namePt String?`, mesmo padrão de fallback.
+- [x] `prisma/data/pack-names-pt.json`: mapa pequeno, curado à mão (não extraído do
+      snapshot), cobrindo só os 7 pacotes com tradução confiável já disponível: 6 que
+      batem exatamente com um nome de coleção em inglês já traduzido (reaproveita o
+      `namePt` daquela coleção, ex. "Crimson Blaze" → "Chama Carmesim"), mais
+      "Team Rocket" → "Equipe Rocket" (derivado da carta "Team Rocket Grunt" →
+      "Recruta da Equipe Rocket", com a mesma frase reaparecendo na tradução da
+      coleção B4a).
+- [x] **Importante**: `Pack.name` também é a chave de rota (não existe `Pack.code`
+      como em `Collection`/`Card`) — por isso `src/lib/queries.ts` expõe
+      `resolvePackName` como função exportada em vez de já devolver o nome resolvido
+      no objeto, e as telas chamam ela só no texto exibido, nunca nos `href`/lookup
+      de imagem, que continuam usando o `pack.name` em inglês sem alteração.
+- [x] Aplicado em teste e produção com consentimento do usuário em 2026-10-16.
+      Resultado real: 7/56 nomes de pacote com `namePt`, o resto cai no fallback em
+      inglês (correto, para a maioria que é nome de Pokémon mesmo).
 
 ### 2b. Nome de cada carta — concluído (fonte encontrada: pokemongohub.net)
 

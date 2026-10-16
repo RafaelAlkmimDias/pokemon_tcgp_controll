@@ -23,6 +23,7 @@ const {
   getDeckDetail,
   getDecks,
   getPackDetail,
+  resolvePackName,
 } = await import("@/lib/queries");
 
 beforeEach(async () => {
@@ -150,6 +151,21 @@ describe("card name localization", () => {
 
     const detail = await getCollectionDetail("A1", "pt");
     expect(detail?.cardsWithoutPack[0].name).toBe("Bulbassauro");
+  });
+});
+
+describe("resolvePackName", () => {
+  it("prefers namePt in pt locale, falling back to name when missing", () => {
+    expect(resolvePackName({ name: "Crimson Blaze", namePt: "Chama Carmesim" }, "pt")).toBe(
+      "Chama Carmesim",
+    );
+    expect(resolvePackName({ name: "Mewtwo", namePt: null }, "pt")).toBe("Mewtwo");
+  });
+
+  it("always uses name in en locale, regardless of namePt", () => {
+    expect(resolvePackName({ name: "Crimson Blaze", namePt: "Chama Carmesim" }, "en")).toBe(
+      "Crimson Blaze",
+    );
   });
 });
 

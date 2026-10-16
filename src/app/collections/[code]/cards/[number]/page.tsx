@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCardDetail } from "@/lib/queries";
+import { getCardDetail, resolvePackName } from "@/lib/queries";
 import { RARITY_CLASS, getRarityLabel, getTypeLabel, getElementLabel } from "@/lib/display";
 import { cardImageUrl } from "@/lib/images";
 import { getLocale } from "@/lib/i18n/getLocale";
@@ -117,7 +117,7 @@ export default async function CardPage({
               href={`/collections/${collection.code}/packs/${encodeURIComponent(pack.name)}`}
               className="pack-pill"
             >
-              {pack.name}
+              {resolvePackName(pack, locale)}
             </Link>
           ))}
         </div>

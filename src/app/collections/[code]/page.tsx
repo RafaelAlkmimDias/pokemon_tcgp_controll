@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCollectionDetail } from "@/lib/queries";
+import { getCollectionDetail, resolvePackName } from "@/lib/queries";
 import { formatDate } from "@/lib/display";
 import { CardTile } from "@/components/CardTile";
 import { CardCountLines } from "@/components/CardCountLines";
@@ -71,14 +71,14 @@ export default async function CollectionPage({
                   <div className="pack-tile-image-wrap">
                     <Image
                       src={packImage}
-                      alt={t.collectionPage.packAlt(pack.name)}
+                      alt={t.collectionPage.packAlt(resolvePackName(pack, locale))}
                       fill
                       sizes="190px"
                       className="card-image"
                     />
                   </div>
                 )}
-                <div className="tile-title">{pack.name}</div>
+                <div className="tile-title">{resolvePackName(pack, locale)}</div>
                 <div className="tile-meta">
                   <CardCountLines stats={pack.stats} t={t.cardCountLines} />
                 </div>

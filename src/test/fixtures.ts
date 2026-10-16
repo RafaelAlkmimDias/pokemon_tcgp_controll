@@ -55,9 +55,17 @@ export function createCard(overrides: {
   });
 }
 
-export function createPack(overrides: { collectionId: string; name: string }) {
+export function createPack(overrides: {
+  collectionId: string;
+  name: string;
+  namePt?: string | null;
+}) {
   return testPrisma.pack.create({
-    data: { collectionId: overrides.collectionId, name: overrides.name },
+    data: {
+      collectionId: overrides.collectionId,
+      name: overrides.name,
+      namePt: overrides.namePt,
+    },
   });
 }
 

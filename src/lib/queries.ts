@@ -19,6 +19,15 @@ function resolveCardName(card: { name: string; namePt: string | null }, locale: 
   return locale === "pt" ? (card.namePt ?? card.name) : card.name;
 }
 
+// Unlike Collection/Card, a Pack's `name` also doubles as its routing key
+// (packs have no separate code/number) - so, unlike the two helpers above,
+// this is never used to overwrite `pack.name` on a returned object. Pages
+// call it directly where a pack name is displayed, while still using the
+// untouched `pack.name` for hrefs.
+export function resolvePackName(pack: { name: string; namePt: string | null }, locale: Locale) {
+  return locale === "pt" ? (pack.namePt ?? pack.name) : pack.name;
+}
+
 export async function getCollections(locale: Locale) {
   const collections = await prisma.collection.findMany({
     orderBy: { releaseDate: "desc" },

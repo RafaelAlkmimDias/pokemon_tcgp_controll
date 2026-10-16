@@ -28,6 +28,10 @@ model Collection {
 model Pack {
   id           String   @id @default(cuid())
   name         String
+  // Portuguese name, for the handful of packs where one is reliably known
+  // (see prisma/data/README.md). Falls back to `name` (English) when missing -
+  // most pack names are Pokémon species names, unchanged between locales.
+  namePt       String?
   collectionId String
   imageUrl     String?
   createdAt    DateTime @default(now())

@@ -29,6 +29,28 @@ function resolveCardNamePt(image: string, englishName: string): string | null {
   return entry.pt;
 }
 
+// Same provenance/snapshot caveats as CARD_NAMES_PT (see prisma/data/README.md).
+// Covers all 24 sets (vs. only 2 in sets.json's own `pt` field), keyed by
+// collection code, uppercased for a case-insensitive lookup.
+const COLLECTION_NAMES_PT: Record<string, string> = JSON.parse(
+  readFileSync(path.join(import.meta.dirname, "data", "collection-names-pt.json"), "utf-8"),
+);
+
+function resolveCollectionNamePt(code: string, fallback: string | null): string | null {
+  return COLLECTION_NAMES_PT[code.toUpperCase()] ?? fallback;
+}
+
+// Same provenance caveats as the other data files - see prisma/data/README.md.
+// Only the handful of pack names with a reliably-sourced translation; most
+// pack names are Pokémon species names, unchanged between locales.
+const PACK_NAMES_PT: Record<string, string> = JSON.parse(
+  readFileSync(path.join(import.meta.dirname, "data", "pack-names-pt.json"), "utf-8"),
+);
+
+function resolvePackNamePt(name: string): string | null {
+  return PACK_NAMES_PT[name] ?? null;
+}
+
 type RawSet = {
   code: string;
   releaseDate: string;
@@ -98,11 +120,11 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
 
   console.log("Fetching source data from flibustier/pokemon-tcg-pocket-database...");
-  const [setsFile, cards, cardsExtra] = await Promise.all([
-    fetchJson<RawSetsFile>("sets.json"),
-    fetchJson<RawCard[]>("cards.json"),
-    fetchJson<RawCardExtra[]>("cards.extra.json"),
-  ]);
+  // Sequential, not Promise.all: some sandboxed/CI network setups throttle
+  // concurrent outbound connections to the same host and time out otherwise.
+  const setsFile = await fetchJson<RawSetsFile>("sets.json");
+  const cards = await fetchJson<RawCard[]>("cards.json");
+  const cardsExtra = await fetchJson<RawCardExtra[]>("cards.extra.json");
 
   const extraByKey = new Map<string, RawCardExtra>();
   for (const extra of cardsExtra) {
@@ -120,14 +142,14 @@ async function main() {
       create: {
         code: rawSet.code,
         name: rawSet.name.en ?? rawSet.code,
-        namePt: rawSet.name.pt ?? null,
+        namePt: resolveCollectionNamePt(rawSet.code, rawSet.name.pt ?? null),
         series,
         releaseDate: new Date(rawSet.releaseDate),
         cardCount: rawSet.count,
       },
       update: {
         name: rawSet.name.en ?? rawSet.code,
-        namePt: rawSet.name.pt ?? null,
+        namePt: resolveCollectionNamePt(rawSet.code, rawSet.name.pt ?? null),
         releaseDate: new Date(rawSet.releaseDate),
         cardCount: rawSet.count,
       },
@@ -137,8 +159,8 @@ async function main() {
     for (const packName of rawSet.packs) {
       const pack = await prisma.pack.upsert({
         where: { collectionId_name: { collectionId: collection.id, name: packName } },
-        create: { collectionId: collection.id, name: packName },
-        update: {},
+        create: { collectionId: collection.id, name: packName, namePt: resolvePackNamePt(packName) },
+        update: { namePt: resolvePackNamePt(packName) },
       });
       packByName.set(packName, pack.id);
     }
@@ -200,8 +222,8 @@ async function main() {
           // Defensive fallback: card references a pack not listed on the set itself.
           const pack = await prisma.pack.upsert({
             where: { collectionId_name: { collectionId: collection.id, name: packName } },
-            create: { collectionId: collection.id, name: packName },
-            update: {},
+            create: { collectionId: collection.id, name: packName, namePt: resolvePackNamePt(packName) },
+            update: { namePt: resolvePackNamePt(packName) },
           });
           packId = pack.id;
           packByName.set(packName, packId);

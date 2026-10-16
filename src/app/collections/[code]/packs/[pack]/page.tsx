@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPackDetail } from "@/lib/queries";
+import { getPackDetail, resolvePackName } from "@/lib/queries";
 import { CardNameFilterGrid } from "@/components/CardNameFilterGrid";
 import { CardCountLines } from "@/components/CardCountLines";
 import { packImageUrl } from "@/lib/images";
@@ -23,6 +23,7 @@ export default async function PackPage({
 
   const { collection, pack, cards, stats } = detail;
   const packImage = packImageUrl(pack.name);
+  const packDisplayName = resolvePackName(pack, locale);
 
   return (
     <main className="container">
@@ -31,7 +32,7 @@ export default async function PackPage({
         <span>/</span>
         <Link href={`/collections/${collection.code}`}>{collection.name}</Link>
         <span>/</span>
-        <span>{pack.name}</span>
+        <span>{packDisplayName}</span>
       </nav>
 
       <div className="media-header">
@@ -39,7 +40,7 @@ export default async function PackPage({
           <div className="pack-detail-image-wrap">
             <Image
               src={packImage}
-              alt={t.packPage.packAlt(pack.name)}
+              alt={t.packPage.packAlt(packDisplayName)}
               fill
               sizes="160px"
               className="card-image"
@@ -48,7 +49,7 @@ export default async function PackPage({
           </div>
         )}
         <div>
-          <h1 className="page-title">{t.packPage.title(pack.name)}</h1>
+          <h1 className="page-title">{t.packPage.title(packDisplayName)}</h1>
           <p className="page-subtitle">{collection.name}</p>
           <CardCountLines stats={stats} className="count-lines-header" t={t.cardCountLines} />
         </div>

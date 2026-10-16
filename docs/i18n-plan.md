@@ -1,0 +1,104 @@
+# Plano — Seleção de idioma (PT/EN), incluindo as cartas
+
+Pesquisa e plano feitos em 2026-10-16. Escopo combinado com o usuário: **apenas
+português e inglês**, em 2 etapas. Tradução do texto do app pode ser feita por nós;
+tradução de nome/dado de carta **não pode ser feita por nós** — só usando uma fonte
+confiável já publicada, nunca uma tradução própria.
+
+## O que a pesquisa confirmou sobre a fonte de dados atual
+
+O projeto usa `flibustier/pokemon-tcg-pocket-database` (ver
+`docs/pokemon-tcgp-data-sources.md` e `prisma/seed.ts`). Verificado diretamente nos
+JSONs publicados pelo repositório:
+
+- **`sets.json`** já traz o nome da coleção em vários idiomas, incluindo `pt`
+  (`name: { en, fr, de, zh, pt, es, it, ja, ko }`). Hoje `prisma/seed.ts` descarta
+  isso e grava só `rawSet.name.en ?? rawSet.code`. **Dá para usar nome de coleção em
+  português agora, sem depender de nenhuma fonte nova.**
+- **`cards.json`** (nome de cada carta) só tem uma string única, em inglês — não é
+  multilíngue. Existem variantes da comunidade `cards.fr.json` e `cards.de.json`
+  (e os respectivos `cards/fr/*.json`, `cards/de/*.json`), mas **não existe
+  `cards.pt.json`**. Conferindo amostras de `cards.fr.json` (ex: cartas #1, #4–#7 do
+  set A1), os nomes vieram idênticos ao inglês ("Caterpie", "Metapod" em vez dos
+  nomes franceses reais) — ou seja, mesmo o francês/alemão estão incompletos nesse
+  repositório. **Hoje não existe, nesse pipeline, uma fonte confiável de nomes de
+  carta em português.**
+- **Imagem da carta** (`image` em `cards.json`) é o mesmo arquivo para inglês, francês
+  e alemão nas amostras verificadas — é um único asset por carta
+  (`scripts/download-images.ts` baixa de `PocketDecks/pokemon-tcg-pocket-cards`), sem
+  variante visual por idioma. **Não existe fonte de arte traduzida no pipeline atual.**
+
+Essas descobertas definem o que é possível fazer agora (Etapa 2a) e o que fica
+bloqueado até surgir fonte melhor (Etapas 2b e 2c).
+
+---
+
+## Etapa 1 — Idioma da interface (PT/EN)
+
+Objetivo: um seletor de idioma que traduz todo o texto do app (labels, botões,
+títulos, rótulos de raridade/elemento/tipo) **sem mexer nos dados das cartas**.
+
+- [ ] Escolher e registrar aqui o mecanismo de persistência do idioma escolhido
+      (cookie, `localStorage`, ou segmento de rota `[locale]` no App Router).
+- [ ] Decidir biblioteca de i18n (ex. `next-intl`) vs. dicionário próprio simples em
+      `src/lib/i18n/` — registrar decisão e motivo aqui.
+- [ ] Extrair as strings fixas em português para o dicionário, arquivo por arquivo:
+  - [ ] `src/app/page.tsx`
+  - [ ] `src/app/decks/page.tsx`
+  - [ ] `src/app/decks/[slug]/page.tsx`
+  - [ ] `src/app/collections/[code]/page.tsx`
+  - [ ] `src/app/collections/[code]/cards/page.tsx`
+  - [ ] `src/app/collections/[code]/cards/[number]/page.tsx`
+  - [ ] `src/app/collections/[code]/packs/[pack]/page.tsx`
+  - [ ] `src/app/layout.tsx`
+  - [ ] `src/components/DecksList.tsx`
+  - [ ] `src/components/CardNameFilterGrid.tsx` (placeholder "Filtrar por nome...")
+  - [ ] `src/lib/display.ts` (`RARITY_LABEL`, `ELEMENT_LABEL` e afins — são rótulos de
+        interface para códigos de enum, não nomes de carta: podemos traduzir à vontade)
+- [ ] Criar os dicionários `pt` e `en` com as chaves extraídas acima.
+- [ ] Adicionar um seletor de idioma visível (ex. no `site-header`), refletindo o
+      idioma atual.
+- [ ] Persistir a escolha do usuário entre sessões/recarregamentos.
+- [ ] Testar a troca de idioma em todas as rotas listadas acima (sem quebrar
+      formatação de `%`, datas, pluralização de "carta(s)").
+- [ ] Rebuildar o container Docker (`docker compose up -d --build app`) e validar
+      manualmente as telas principais nos dois idiomas.
+
+## Etapa 2 — Idioma das cartas
+
+### 2a. Nome da coleção/set — viável agora, sem nova fonte de dados
+
+- [ ] Alterar `prisma/schema.prisma`: `Collection` passa a guardar nome em mais de um
+      idioma (ex. `name` continua sendo o nome "canônico" e soma-se `namePt`, ou criar
+      uma tabela `CollectionTranslation(collectionId, locale, name)` — registrar aqui
+      a opção escolhida).
+- [ ] Atualizar `prisma/seed.ts` para gravar `rawSet.name.en` **e** `rawSet.name.pt`
+      (o JSON de `sets.json` já traz os dois).
+- [ ] Rodar `npm run db:seed` para popular os nomes traduzidos nas coleções já
+      existentes no banco.
+- [ ] Atualizar `src/lib/queries.ts` para devolver o nome da coleção de acordo com o
+      idioma ativo (com fallback para inglês se faltar tradução).
+- [ ] Atualizar as telas que exibem `collection.name` para refletir o idioma
+      selecionado na Etapa 1.
+
+### 2b. Nome de cada carta — bloqueado por falta de fonte confiável
+
+- [ ] Verificar periodicamente se `flibustier/pokemon-tcg-pocket-database` passou a
+      publicar `cards.pt.json` (ou um `cards/pt/*.json` completo e confiável — não só
+      um arquivo existente, mas de fato traduzido, como mostrou não ser o caso do
+      `fr`/`de` em 2026-10-16).
+- [ ] Caso surja uma fonte assim, mapear o nome por idioma (`CardTranslation` ou
+      campo `namePt`/`nameEn` em `cards`) e atualizar `prisma/seed.ts` para importar.
+- [ ] Enquanto não houver fonte confiável, manter o nome da carta sempre em inglês,
+      independentemente do idioma de interface escolhido — e deixar isso visível para
+      o usuário (ex. nota/indicador na tela), em vez de aparentar suporte completo.
+- [ ] **Não** implementar tradução própria para nomes de carta — fora do escopo
+      combinado com o usuário.
+
+### 2c. Arte da carta — fora de escopo por enquanto
+
+- [ ] Documentar (este arquivo já cobre isso) que a arte é um único asset por carta,
+      sem variante por idioma, na fonte usada hoje (`scripts/download-images.ts` →
+      `PocketDecks/pokemon-tcg-pocket-cards`).
+- [ ] Se uma fonte de imagens por idioma surgir no futuro, reavaliar esta etapa; até
+      lá, a arte da carta não muda com o idioma selecionado.

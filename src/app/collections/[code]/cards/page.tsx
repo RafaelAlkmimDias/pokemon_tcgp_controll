@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCollectionCards } from "@/lib/queries";
-import { CardTile } from "@/components/CardTile";
+import { CardNameFilterGrid } from "@/components/CardNameFilterGrid";
 import { CardCountLines } from "@/components/CardCountLines";
 
 export const dynamic = "force-dynamic";
@@ -33,11 +33,7 @@ export default async function CollectionCardsPage({
       {cards.length === 0 ? (
         <p className="empty-state">Nenhuma carta cadastrada para esta coleção.</p>
       ) : (
-        <div className="grid">
-          {cards.map((card) => (
-            <CardTile key={card.id} card={card} collectionCode={collection.code} />
-          ))}
-        </div>
+        <CardNameFilterGrid cards={cards} collectionCode={collection.code} />
       )}
     </main>
   );

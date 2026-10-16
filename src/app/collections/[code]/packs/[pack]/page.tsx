@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPackDetail } from "@/lib/queries";
-import { CardTile } from "@/components/CardTile";
+import { CardNameFilterGrid } from "@/components/CardNameFilterGrid";
 import { CardCountLines } from "@/components/CardCountLines";
 import { packImageUrl } from "@/lib/images";
 
@@ -53,11 +53,7 @@ export default async function PackPage({
       {cards.length === 0 ? (
         <p className="empty-state">Nenhuma carta cadastrada para este pacote.</p>
       ) : (
-        <div className="grid">
-          {cards.map((card) => (
-            <CardTile key={card.id} card={card} collectionCode={collection.code} />
-          ))}
-        </div>
+        <CardNameFilterGrid cards={cards} collectionCode={collection.code} />
       )}
     </main>
   );

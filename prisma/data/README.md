@@ -83,18 +83,38 @@ for not risking a wrong translation.
   rather than risk assigning a wrong name.
 - `pocket.pokemongohub.net` is behind Cloudflare bot protection, so this
   pipeline **cannot** re-fetch automatically like `sets.json` does for
-  collection names (stage 2a). Refreshing this file means someone manually
-  re-saving the page (ideally scrolled through fully, or once newer sets are
-  indexed) and re-running the extraction.
+  collection names (stage 2a). Refreshing means manually saving the page
+  again and re-running the extraction script below - there's no way to
+  automate the download step itself.
 
-## Refreshing
+## Is this a good source to keep using?
 
-1. Open `https://pocket.pokemongohub.net/pt/cards` in a real browser, scroll
-   through so the virtualized list mounts every card (not strictly required -
-   the full dataset ships in the page regardless, see above), then save the
-   complete page (HTML).
-2. Extract the `self.__next_f.push(...)` script with the `initialCards` JSON
-   array embedded in it, parse out `{ image_id, name }` pairs, and rebuild the
-   `asset_id -> name` map the same way this file was generated - see the
-   git history of this file/directory for the extraction script used.
-3. Re-run `npm run db:seed` to apply it (prisma/seed.ts reads this file).
+Yes. It's the best one found so far for Portuguese card/collection names (see
+"Provenance" above): it's structured per-card/per-set data straight from the
+site, not a community translation, and it's held up well under scrutiny - 88%
+card coverage, corroborated against an independent source (`sets.json`) where
+they overlap (both agreed exactly on `A1`/`A1a`), and only 2 confirmed bad
+rows found out of hundreds manually checked. **When new sets release, or
+whenever more cards/collections should be covered than are today, come back
+to this same source** rather than looking for a different one:
+
+1. Open `https://pocket.pokemongohub.net/pt/cards` in a real browser (it
+   blocks headless/automated fetches) and save the complete page (e.g.
+   Ctrl+S / Cmd+S → "Webpage, Complete") somewhere Claude can read it, such as
+   your Downloads folder.
+2. Run the extraction script against that saved file:
+   ```bash
+   npx tsx scripts/extract-pokemongohub-names.ts "<path to the saved .html file>"
+   ```
+   This regenerates `card-names-pt.json` and `collection-names-pt.json` in
+   place (sorted/indented, so `git diff` shows exactly what changed) and
+   prints a coverage summary. It does **not** touch `pack-names-pt.json`
+   (hand-curated) - review that one by hand if new packs might now have a
+   reliable translation available (see its description above).
+3. Skim `git diff prisma/data/` - new sets should show up as new keys; nothing
+   existing should change names outright (if something does, double-check it
+   before trusting it, the same way the `PK_10_001450_00`/`PK_10_001660_00`
+   issue above was caught).
+4. Run `npm run db:seed` to apply the refreshed data (this also re-fetches
+   `sets.json`/`cards.json` from flibustier, so it picks up brand new
+   sets/cards there too, not just the translated names).

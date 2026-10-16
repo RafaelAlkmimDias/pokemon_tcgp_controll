@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Card } from "@prisma/client";
-import { RARITY_CLASS, RARITY_LABEL } from "@/lib/display";
+import { RARITY_CLASS, getRarityLabel } from "@/lib/display";
 import { cardImageUrl } from "@/lib/images";
 import { decrementOwnedQuantity, incrementOwnedQuantity } from "@/lib/actions";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/locale";
 
 type CardWithPrint = Card & { print: { id: string; ownedQuantity: number } };
 
@@ -12,6 +14,8 @@ export function CardTile({
   collectionCode,
   neededQuantity,
   availableQuantity,
+  locale,
+  t,
 }: {
   card: CardWithPrint;
   collectionCode: string;
@@ -22,6 +26,8 @@ export function CardTile({
    * copies already committed to other built decks. Defaults to the raw
    * owned quantity. */
   availableQuantity?: number;
+  locale: Locale;
+  t: Dictionary["cardTile"];
 }) {
   const owned = availableQuantity ?? card.print.ownedQuantity;
   const hasEnough = neededQuantity === undefined ? owned > 0 : owned >= neededQuantity;
@@ -51,7 +57,7 @@ export function CardTile({
         <span className="card-number">#{card.number}</span>
         <span className="tile-title">{card.name}</span>
         <span className={`badge ${RARITY_CLASS[card.rarity]}`}>
-          {RARITY_LABEL[card.rarity]}
+          {getRarityLabel(card.rarity, locale)}
         </span>
       </Link>
 
@@ -60,7 +66,7 @@ export function CardTile({
           <button
             type="submit"
             className="qty-btn"
-            aria-label={`Diminuir quantidade de ${card.name}`}
+            aria-label={`${t.decreaseLabelPrefix} ${card.name}`}
           >
             −
           </button>
@@ -68,7 +74,7 @@ export function CardTile({
         <span className="qty-count">
           {neededQuantity !== undefined ? `${owned}/${neededQuantity}` : owned}
           {neededQuantity !== undefined && hasEnough && (
-            <span className="complete-check" aria-label="Quantidade suficiente">
+            <span className="complete-check" aria-label={t.sufficientAriaLabel}>
               ✓
             </span>
           )}
@@ -77,7 +83,7 @@ export function CardTile({
           <button
             type="submit"
             className="qty-btn"
-            aria-label={`Aumentar quantidade de ${card.name}`}
+            aria-label={`${t.increaseLabelPrefix} ${card.name}`}
           >
             +
           </button>

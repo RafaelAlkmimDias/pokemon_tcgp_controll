@@ -6,12 +6,16 @@ import { formatDate } from "@/lib/display";
 import { CardTile } from "@/components/CardTile";
 import { CardCountLines } from "@/components/CardCountLines";
 import { collectionLogoUrl, packImageUrl } from "@/lib/images";
+import { getLocale } from "@/lib/i18n/getLocale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export const dynamic = "force-dynamic";
 
 export default async function CollectionPage({
   params,
 }: PageProps<"/collections/[code]">) {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const { code } = await params;
   const detail = await getCollectionDetail(code);
 
@@ -22,7 +26,7 @@ export default async function CollectionPage({
   return (
     <main className="container">
       <nav className="breadcrumb">
-        <Link href="/">Coleções</Link>
+        <Link href="/">{t.breadcrumb.collections}</Link>
         <span>/</span>
         <span>{collection.name}</span>
       </nav>
@@ -41,18 +45,18 @@ export default async function CollectionPage({
         <div>
           <h1 className="page-title">{collection.name}</h1>
           <p className="page-subtitle">
-            {collection.code} · {formatDate(collection.releaseDate)}
+            {collection.code} · {formatDate(collection.releaseDate, locale)}
           </p>
-          <CardCountLines stats={stats} className="count-lines-header" />
+          <CardCountLines stats={stats} className="count-lines-header" t={t.cardCountLines} />
           <Link href={`/collections/${collection.code}/cards`} className="pack-pill">
-            Ver todas as cartas da coleção
+            {t.collectionPage.viewAllCards}
           </Link>
         </div>
       </div>
 
-      <h2 className="section-title">Pacotes</h2>
+      <h2 className="section-title">{t.collectionPage.packsTitle}</h2>
       {collection.packs.length === 0 ? (
-        <p className="empty-state">Esta coleção não tem pacotes próprios.</p>
+        <p className="empty-state">{t.collectionPage.noOwnPacksEmptyState}</p>
       ) : (
         <div className="grid">
           {collection.packs.map((pack) => {
@@ -67,7 +71,7 @@ export default async function CollectionPage({
                   <div className="pack-tile-image-wrap">
                     <Image
                       src={packImage}
-                      alt={`Pacote ${pack.name}`}
+                      alt={t.collectionPage.packAlt(pack.name)}
                       fill
                       sizes="190px"
                       className="card-image"
@@ -76,7 +80,7 @@ export default async function CollectionPage({
                 )}
                 <div className="tile-title">{pack.name}</div>
                 <div className="tile-meta">
-                  <CardCountLines stats={pack.stats} />
+                  <CardCountLines stats={pack.stats} t={t.cardCountLines} />
                 </div>
               </Link>
             );
@@ -87,11 +91,17 @@ export default async function CollectionPage({
       {cardsWithoutPack.length > 0 && (
         <>
           <h2 className="section-title">
-            Cartas sem pacote específico ({cardsWithoutPack.length})
+            {t.collectionPage.cardsWithoutPackTitle(cardsWithoutPack.length)}
           </h2>
           <div className="grid">
             {cardsWithoutPack.map((card) => (
-              <CardTile key={card.id} card={card} collectionCode={collection.code} />
+              <CardTile
+                key={card.id}
+                card={card}
+                collectionCode={collection.code}
+                locale={locale}
+                t={t.cardTile}
+              />
             ))}
           </div>
         </>

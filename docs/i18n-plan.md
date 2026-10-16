@@ -38,30 +38,45 @@ bloqueado até surgir fonte melhor (Etapas 2b e 2c).
 Objetivo: um seletor de idioma que traduz todo o texto do app (labels, botões,
 títulos, rótulos de raridade/elemento/tipo) **sem mexer nos dados das cartas**.
 
-- [ ] Escolher e registrar aqui o mecanismo de persistência do idioma escolhido
-      (cookie, `localStorage`, ou segmento de rota `[locale]` no App Router).
-- [ ] Decidir biblioteca de i18n (ex. `next-intl`) vs. dicionário próprio simples em
-      `src/lib/i18n/` — registrar decisão e motivo aqui.
-- [ ] Extrair as strings fixas em português para o dicionário, arquivo por arquivo:
-  - [ ] `src/app/page.tsx`
-  - [ ] `src/app/decks/page.tsx`
-  - [ ] `src/app/decks/[slug]/page.tsx`
-  - [ ] `src/app/collections/[code]/page.tsx`
-  - [ ] `src/app/collections/[code]/cards/page.tsx`
-  - [ ] `src/app/collections/[code]/cards/[number]/page.tsx`
-  - [ ] `src/app/collections/[code]/packs/[pack]/page.tsx`
-  - [ ] `src/app/layout.tsx`
-  - [ ] `src/components/DecksList.tsx`
-  - [ ] `src/components/CardNameFilterGrid.tsx` (placeholder "Filtrar por nome...")
-  - [ ] `src/lib/display.ts` (`RARITY_LABEL`, `ELEMENT_LABEL` e afins — são rótulos de
+- [x] Mecanismo de persistência: **cookie** HTTP (`locale`, padrão `"pt"`), lido nos
+      Server Components via `next/headers` `cookies()` e gravado por uma Server
+      Action (`src/lib/i18n/actions.ts`). Descartado o segmento de rota `[locale]`
+      por exigir reestruturar toda a árvore de rotas e todos os `Link`/`href`
+      existentes só para uma preferência de idioma por visitante, sem necessidade
+      de URLs indexáveis por idioma.
+- [x] Biblioteca: **dicionário próprio**, sem `next-intl`/lib externa. Projeto é
+      pequeno (~10 arquivos, 2 idiomas), majoritariamente Server Components, e um
+      dicionário simples em `src/lib/i18n/` fica totalmente tipado e fácil de
+      testar com o Vitest já configurado (necessário para manter os 80% de
+      cobertura) sem adicionar dependência nova.
+- [x] Extrair as strings fixas em português para o dicionário, arquivo por arquivo:
+  - [x] `src/app/page.tsx`
+  - [x] `src/app/decks/page.tsx`
+  - [x] `src/app/decks/[slug]/page.tsx`
+  - [x] `src/app/collections/[code]/page.tsx`
+  - [x] `src/app/collections/[code]/cards/page.tsx`
+  - [x] `src/app/collections/[code]/cards/[number]/page.tsx`
+  - [x] `src/app/collections/[code]/packs/[pack]/page.tsx`
+  - [x] `src/app/layout.tsx`
+  - [x] `src/components/DecksList.tsx`
+  - [x] `src/components/CardNameFilterGrid.tsx` (placeholder "Filtrar por nome...")
+  - [x] `src/lib/display.ts` (`RARITY_LABEL`, `ELEMENT_LABEL` e afins — são rótulos de
         interface para códigos de enum, não nomes de carta: podemos traduzir à vontade)
-- [ ] Criar os dicionários `pt` e `en` com as chaves extraídas acima.
-- [ ] Adicionar um seletor de idioma visível (ex. no `site-header`), refletindo o
-      idioma atual.
-- [ ] Persistir a escolha do usuário entre sessões/recarregamentos.
-- [ ] Testar a troca de idioma em todas as rotas listadas acima (sem quebrar
-      formatação de `%`, datas, pluralização de "carta(s)").
-- [ ] Rebuildar o container Docker (`docker compose up -d --build app`) e validar
+- [x] Criar os dicionários `pt` e `en` com as chaves extraídas acima
+      (`src/lib/i18n/dictionaries.ts`). Nota: entradas usadas por Client Components
+      (`cardTile`, `cardFilter`, `decksList`, `deckStar`, `languageSwitcher`) tiveram
+      que ficar como strings puras, nunca funções — React não serializa funções ao
+      cruzar a fronteira Server→Client, e isso só quebra em runtime real
+      (`next dev`/E2E), não nos testes unitários com render direto em jsdom.
+- [x] Adicionar um seletor de idioma visível (`LanguageSwitcher`, no `site-header`),
+      refletindo o idioma atual.
+- [x] Persistir a escolha do usuário entre sessões/recarregamentos (cookie `locale`,
+      1 ano, `path=/`, gravado pela Server Action `setLocale`).
+- [x] Testar a troca de idioma em todas as rotas listadas acima (sem quebrar
+      formatação de `%`, datas, pluralização de "carta(s)") — cobertura automatizada
+      em `e2e/language-switcher.spec.ts` + verificação visual manual (home, decks,
+      pacote, detalhe de carta com todos os campos preenchidos) nos dois idiomas.
+- [x] Rebuildar o container Docker (`docker compose up -d --build app`) e validar
       manualmente as telas principais nos dois idiomas.
 
 ## Etapa 2 — Idioma das cartas

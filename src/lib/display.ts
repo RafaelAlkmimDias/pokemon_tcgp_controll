@@ -1,19 +1,6 @@
 import type { CardType, Rarity } from "@prisma/client";
-
-export const RARITY_LABEL: Record<Rarity, string> = {
-  C: "Comum",
-  U: "Incomum",
-  R: "Rara",
-  RR: "Dupla Rara",
-  AR: "Arte Rara",
-  SR: "Rara Especial",
-  SAR: "Arte Rara Especial",
-  IM: "Rara Imersiva",
-  UR: "Ultra Rara",
-  S: "Shiny",
-  SSR: "Super Rara Especial",
-  UNKNOWN: "Desconhecida",
-};
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/locale";
 
 export const RARITY_CLASS: Record<Rarity, string> = {
   C: "rarity-common",
@@ -30,30 +17,23 @@ export const RARITY_CLASS: Record<Rarity, string> = {
   UNKNOWN: "rarity-common",
 };
 
-export const TYPE_LABEL: Record<CardType, string> = {
-  POKEMON: "Pokémon",
-  SUPPORTER: "Suporte",
-  ITEM: "Item",
-  TOOL: "Ferramenta",
-  FOSSIL: "Fóssil",
-};
+export function getRarityLabel(rarity: Rarity, locale: Locale) {
+  return getDictionary(locale).rarity[rarity];
+}
 
-export const ELEMENT_LABEL: Record<string, string> = {
-  grass: "Grama",
-  fire: "Fogo",
-  water: "Água",
-  lightning: "Elétrico",
-  psychic: "Psíquico",
-  fighting: "Lutador",
-  darkness: "Sombrio",
-  metal: "Metal",
-  dragon: "Dragão",
-  colorless: "Incolor",
-};
+export function getTypeLabel(type: CardType, locale: Locale) {
+  return getDictionary(locale).cardType[type];
+}
 
-export function formatDate(date: Date | null) {
-  if (!date) return "Data desconhecida";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(date);
+export function getElementLabel(element: string, locale: Locale) {
+  const label = (getDictionary(locale).element as Record<string, string | undefined>)[element];
+  return label ?? capitalize(element);
+}
+
+export function formatDate(date: Date | null, locale: Locale) {
+  const dict = getDictionary(locale);
+  if (!date) return dict.display.unknownDate;
+  return new Intl.DateTimeFormat(dict.display.dateLocale, { dateStyle: "long" }).format(date);
 }
 
 export function capitalize(value: string) {

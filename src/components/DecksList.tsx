@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ELEMENT_LABEL, capitalize, formatPercent } from "@/lib/display";
+import { getElementLabel, formatPercent } from "@/lib/display";
 import { toggleDeckBuilt } from "@/lib/actions";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/locale";
 
 type DeckSummary = {
   id: string;
@@ -20,13 +22,6 @@ type DeckSummary = {
 
 type SortKey = "metaScore" | "popularity" | "expectedWinRate" | "sufficientCount";
 
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: "metaScore", label: "Relevância no meta" },
-  { key: "popularity", label: "% do meta" },
-  { key: "expectedWinRate", label: "% de vitórias esperadas" },
-  { key: "sufficientCount", label: "Cartas na quantidade certa" },
-];
-
 function sortValue(deck: DeckSummary, key: SortKey): number {
   if (key === "sufficientCount") {
     // Compare completion ratio, not raw count, so e.g. 13/13 outranks 14/15.
@@ -37,9 +32,26 @@ function sortValue(deck: DeckSummary, key: SortKey): number {
   return value === null ? -Infinity : value;
 }
 
-export function DecksList({ decks }: { decks: DeckSummary[] }) {
+type DecksListDictionary = Dictionary["decksList"] & { deckStar: Dictionary["deckStar"] };
+
+export function DecksList({
+  decks,
+  locale,
+  t,
+}: {
+  decks: DeckSummary[];
+  locale: Locale;
+  t: DecksListDictionary;
+}) {
   const [filter, setFilter] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("metaScore");
+
+  const sortOptions: { key: SortKey; label: string }[] = [
+    { key: "metaScore", label: t.sortMetaScore },
+    { key: "popularity", label: t.sortPopularity },
+    { key: "expectedWinRate", label: t.sortExpectedWinRate },
+    { key: "sufficientCount", label: t.sortSufficientCount },
+  ];
 
   const availableElements = useMemo(
     () => [...new Set(decks.flatMap((deck) => deck.elements))].sort(),
@@ -59,7 +71,7 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
           className={filter === null ? "chip chip-active" : "chip"}
           onClick={() => setFilter(null)}
         >
-          Todos
+          {t.all}
         </button>
         {availableElements.map((element) => (
           <button
@@ -68,15 +80,15 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
             className={filter === element ? "chip chip-active" : "chip"}
             onClick={() => setFilter(element === filter ? null : element)}
           >
-            {ELEMENT_LABEL[element] ?? capitalize(element)}
+            {getElementLabel(element, locale)}
           </button>
         ))}
       </div>
 
       <label className="sort-control">
-        Ordenar por
+        {t.sortBy}
         <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
-          {SORT_OPTIONS.map((option) => (
+          {sortOptions.map((option) => (
             <option key={option.key} value={option.key}>
               {option.label}
             </option>
@@ -85,7 +97,7 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
       </label>
 
       {visibleDecks.length === 0 ? (
-        <p className="empty-state">Nenhum baralho desse tipo no meta atual.</p>
+        <p className="empty-state">{t.emptyState}</p>
       ) : (
         <div className="grid">
           {visibleDecks.map((deck) => (
@@ -96,10 +108,14 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
               <Link href={`/decks/${encodeURIComponent(deck.slug)}`} className="deck-tile-link">
                 <div className="tile-title">{deck.displayName}</div>
                 <div className="tile-meta">
-                  <span>{formatPercent(deck.popularity)} do meta</span>
-                  <span>{formatPercent(deck.expectedWinRate)} de vitórias esperada</span>
                   <span>
-                    {deck.sufficientCount}/{deck.totalCards} cartas na quantidade certa
+                    {formatPercent(deck.popularity)} {t.metaShareSuffix}
+                  </span>
+                  <span>
+                    {formatPercent(deck.expectedWinRate)} {t.expectedWinRateSuffix}
+                  </span>
+                  <span>
+                    {deck.sufficientCount}/{deck.totalCards} {t.sufficientCardsLabel}
                   </span>
                 </div>
               </Link>
@@ -107,10 +123,8 @@ export function DecksList({ decks }: { decks: DeckSummary[] }) {
                 <button
                   type="submit"
                   className={deck.isBuilt ? "deck-star deck-star-active" : "deck-star"}
-                  aria-label={
-                    deck.isBuilt ? "Desmarcar como montado" : "Marcar como montado"
-                  }
-                  title={deck.isBuilt ? "Montado" : "Marcar como montado"}
+                  aria-label={deck.isBuilt ? t.deckStar.unmark : t.deckStar.mark}
+                  title={deck.isBuilt ? t.deckStar.built : t.deckStar.mark}
                 >
                   {deck.isBuilt ? "★" : "☆"}
                 </button>

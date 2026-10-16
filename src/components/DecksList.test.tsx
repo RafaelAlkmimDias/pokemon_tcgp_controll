@@ -2,10 +2,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { DecksList } from "@/components/DecksList";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 
 vi.mock("@/lib/actions", () => ({
   toggleDeckBuilt: vi.fn(),
 }));
+
+const t = { ...dictionaries.pt.decksList, deckStar: dictionaries.pt.deckStar };
 
 const decks = [
   {
@@ -48,13 +51,13 @@ const decks = [
 
 describe("DecksList", () => {
   it("sorts by meta relevance by default, nulls last", () => {
-    render(<DecksList decks={decks} />);
+    render(<DecksList decks={decks} locale="pt" t={t} />);
     const titles = screen.getAllByText(/Deck [A-C]/).map((el) => el.textContent);
     expect(titles).toEqual(["Deck B", "Deck A", "Deck C"]);
   });
 
   it("filters by element chip", () => {
-    render(<DecksList decks={decks} />);
+    render(<DecksList decks={decks} locale="pt" t={t} />);
     fireEvent.click(screen.getByRole("button", { name: "Água" }));
     expect(screen.getByText("Deck B")).toBeInTheDocument();
     expect(screen.queryByText("Deck A")).not.toBeInTheDocument();
@@ -62,7 +65,7 @@ describe("DecksList", () => {
   });
 
   it("clicking the active chip again clears the filter", () => {
-    render(<DecksList decks={decks} />);
+    render(<DecksList decks={decks} locale="pt" t={t} />);
     const chip = screen.getByRole("button", { name: "Água" });
     fireEvent.click(chip);
     fireEvent.click(chip);
@@ -71,7 +74,7 @@ describe("DecksList", () => {
   });
 
   it("sorts by sufficient-cards ratio, not raw count, when that option is picked", () => {
-    render(<DecksList decks={decks} />);
+    render(<DecksList decks={decks} locale="pt" t={t} />);
     fireEvent.change(screen.getByLabelText(/Ordenar por/), {
       target: { value: "sufficientCount" },
     });
@@ -81,7 +84,7 @@ describe("DecksList", () => {
   });
 
   it("shows an empty state when there are no decks to list", () => {
-    render(<DecksList decks={[]} />);
+    render(<DecksList decks={[]} locale="pt" t={t} />);
     expect(screen.getByText("Nenhum baralho desse tipo no meta atual.")).toBeInTheDocument();
   });
 });

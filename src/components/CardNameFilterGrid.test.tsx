@@ -3,11 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { Card } from "@prisma/client";
 import { CardNameFilterGrid } from "@/components/CardNameFilterGrid";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 
 vi.mock("@/lib/actions", () => ({
   incrementOwnedQuantity: vi.fn(),
   decrementOwnedQuantity: vi.fn(),
 }));
+
+const t = { ...dictionaries.pt.cardFilter, cardTile: dictionaries.pt.cardTile };
 
 function makeCard(id: string, number: number, name: string): Card & {
   print: { id: string; ownedQuantity: number };
@@ -41,14 +44,14 @@ const cards = [
 
 describe("CardNameFilterGrid", () => {
   it("shows every card when the filter is empty", () => {
-    render(<CardNameFilterGrid cards={cards} collectionCode="A1" />);
+    render(<CardNameFilterGrid cards={cards} collectionCode="A1" locale="pt" t={t} />);
     expect(screen.getByText("Bulbasaur")).toBeInTheDocument();
     expect(screen.getByText("Tadbulb")).toBeInTheDocument();
     expect(screen.getByText("Charmander")).toBeInTheDocument();
   });
 
   it("filters live, case-insensitively, by partial name match", () => {
-    render(<CardNameFilterGrid cards={cards} collectionCode="A1" />);
+    render(<CardNameFilterGrid cards={cards} collectionCode="A1" locale="pt" t={t} />);
     fireEvent.change(screen.getByPlaceholderText("Filtrar por nome..."), {
       target: { value: "bul" },
     });
@@ -58,7 +61,7 @@ describe("CardNameFilterGrid", () => {
   });
 
   it("shows an empty state when nothing matches", () => {
-    render(<CardNameFilterGrid cards={cards} collectionCode="A1" />);
+    render(<CardNameFilterGrid cards={cards} collectionCode="A1" locale="pt" t={t} />);
     fireEvent.change(screen.getByPlaceholderText("Filtrar por nome..."), {
       target: { value: "zzz" },
     });

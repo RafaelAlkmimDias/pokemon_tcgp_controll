@@ -1,23 +1,32 @@
 import { describe, expect, it } from "vitest";
 import {
   capitalize,
-  ELEMENT_LABEL,
   formatDate,
   formatPercent,
+  getElementLabel,
+  getRarityLabel,
+  getTypeLabel,
   RARITY_CLASS,
-  RARITY_LABEL,
-  TYPE_LABEL,
 } from "@/lib/display";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import { LOCALES } from "@/lib/i18n/locale";
 
 describe("formatDate", () => {
-  it("formats a date using long pt-BR style", () => {
-    const formatted = formatDate(new Date("2026-03-05T00:00:00Z"));
+  it("formats a date using long pt-BR style for the pt locale", () => {
+    const formatted = formatDate(new Date("2026-03-05T00:00:00Z"), "pt");
     expect(formatted).toContain("2026");
     expect(formatted).toMatch(/março/i);
   });
 
-  it("falls back to a placeholder for a null date", () => {
-    expect(formatDate(null)).toBe("Data desconhecida");
+  it("formats a date using long en-US style for the en locale", () => {
+    const formatted = formatDate(new Date("2026-03-05T00:00:00Z"), "en");
+    expect(formatted).toContain("2026");
+    expect(formatted).toMatch(/march/i);
+  });
+
+  it("falls back to a locale-specific placeholder for a null date", () => {
+    expect(formatDate(null, "pt")).toBe("Data desconhecida");
+    expect(formatDate(null, "en")).toBe("Unknown date");
   });
 });
 
@@ -37,21 +46,31 @@ describe("formatPercent", () => {
 });
 
 describe("label dictionaries", () => {
-  it("has a rarity label and css class for every rarity", () => {
-    for (const rarity of Object.keys(RARITY_LABEL)) {
-      expect(RARITY_LABEL[rarity as keyof typeof RARITY_LABEL]).toBeTruthy();
-      expect(RARITY_CLASS[rarity as keyof typeof RARITY_CLASS]).toBeTruthy();
+  it("has a rarity label and css class for every rarity, in every locale", () => {
+    for (const locale of LOCALES) {
+      for (const rarity of Object.keys(dictionaries[locale].rarity)) {
+        expect(getRarityLabel(rarity as never, locale)).toBeTruthy();
+        expect(RARITY_CLASS[rarity as keyof typeof RARITY_CLASS]).toBeTruthy();
+      }
     }
   });
 
-  it("has a label for every card type", () => {
-    for (const type of Object.keys(TYPE_LABEL)) {
-      expect(TYPE_LABEL[type as keyof typeof TYPE_LABEL]).toBeTruthy();
+  it("has a label for every card type, in every locale", () => {
+    for (const locale of LOCALES) {
+      for (const type of Object.keys(dictionaries[locale].cardType)) {
+        expect(getTypeLabel(type as never, locale)).toBeTruthy();
+      }
     }
   });
 
-  it("maps known elements to a Portuguese label", () => {
-    expect(ELEMENT_LABEL.fire).toBe("Fogo");
-    expect(ELEMENT_LABEL.water).toBe("Água");
+  it("maps known elements to a label per locale", () => {
+    expect(getElementLabel("fire", "pt")).toBe("Fogo");
+    expect(getElementLabel("water", "pt")).toBe("Água");
+    expect(getElementLabel("fire", "en")).toBe("Fire");
+    expect(getElementLabel("water", "en")).toBe("Water");
+  });
+
+  it("falls back to a capitalized element code for an unknown element", () => {
+    expect(getElementLabel("mystery", "en")).toBe("Mystery");
   });
 });

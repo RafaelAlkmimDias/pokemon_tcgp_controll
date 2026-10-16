@@ -4,10 +4,14 @@ import { getDeckDetail } from "@/lib/queries";
 import { formatPercent } from "@/lib/display";
 import { CardTile } from "@/components/CardTile";
 import { toggleDeckBuilt } from "@/lib/actions";
+import { getLocale } from "@/lib/i18n/getLocale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export const dynamic = "force-dynamic";
 
 export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const { slug: slugParam } = await params;
   const slug = decodeURIComponent(slugParam);
   const detail = await getDeckDetail(slug);
@@ -19,7 +23,7 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
   return (
     <main className="container">
       <nav className="breadcrumb">
-        <Link href="/decks">Baralhos</Link>
+        <Link href="/decks">{t.layout.decksLink}</Link>
         <span>/</span>
         <span>{deck.displayName}</span>
       </nav>
@@ -30,22 +34,22 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
           <button
             type="submit"
             className={deck.isBuilt ? "deck-star deck-star-active" : "deck-star"}
-            aria-label={deck.isBuilt ? "Desmarcar como montado" : "Marcar como montado"}
-            title={deck.isBuilt ? "Montado" : "Marcar como montado"}
+            aria-label={deck.isBuilt ? t.deckStar.unmark : t.deckStar.mark}
+            title={deck.isBuilt ? t.deckStar.built : t.deckStar.mark}
           >
             {deck.isBuilt ? "★" : "☆"}
           </button>
         </form>
       </div>
       <p className="page-subtitle">
-        {formatPercent(deck.popularity)} do meta · {formatPercent(deck.expectedWinRate)} de
-        vitórias esperada
+        {formatPercent(deck.popularity)} {t.deckDetailPage.metaShareSuffix} ·{" "}
+        {formatPercent(deck.expectedWinRate)} {t.deckDetailPage.expectedWinRateSuffix}
       </p>
       <div className="count-lines count-lines-header">
         <span>
-          {sufficientCount}/{deck.cards.length} cartas na quantidade certa
+          {sufficientCount}/{deck.cards.length} {t.deckDetailPage.sufficientCardsLabel}
           {sufficientCount === deck.cards.length && (
-            <span className="complete-check" aria-label="Baralho completo">
+            <span className="complete-check" aria-label={t.deckDetailPage.completeAriaLabel}>
               ✓
             </span>
           )}
@@ -60,6 +64,8 @@ export default async function DeckPage({ params }: PageProps<"/decks/[slug]">) {
             collectionCode={deckCard.card.collection.code}
             neededQuantity={deckCard.quantity}
             availableQuantity={deckCard.availableQuantity}
+            locale={locale}
+            t={t.cardTile}
           />
         ))}
       </div>

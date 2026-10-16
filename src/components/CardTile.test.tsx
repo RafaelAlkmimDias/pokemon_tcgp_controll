@@ -3,11 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import type { Card } from "@prisma/client";
 import { CardTile } from "@/components/CardTile";
+import { dictionaries } from "@/lib/i18n/dictionaries";
 
 vi.mock("@/lib/actions", () => ({
   incrementOwnedQuantity: vi.fn(),
   decrementOwnedQuantity: vi.fn(),
 }));
+
+const t = dictionaries.pt.cardTile;
 
 type CardWithPrint = Card & { print: { id: string; ownedQuantity: number } };
 
@@ -36,7 +39,14 @@ function makeCard(overrides: Partial<CardWithPrint> = {}): CardWithPrint {
 
 describe("CardTile", () => {
   it("shows just the owned count when there's no needed quantity", () => {
-    render(<CardTile card={makeCard({ print: { id: "print-1", ownedQuantity: 3 } })} collectionCode="A1" />);
+    render(
+      <CardTile
+        card={makeCard({ print: { id: "print-1", ownedQuantity: 3 } })}
+        collectionCode="A1"
+        locale="pt"
+        t={t}
+      />,
+    );
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
@@ -46,6 +56,8 @@ describe("CardTile", () => {
         card={makeCard({ print: { id: "print-1", ownedQuantity: 1 } })}
         collectionCode="A1"
         neededQuantity={2}
+        locale="pt"
+        t={t}
       />,
     );
     expect(screen.getByText("1/2")).toBeInTheDocument();
@@ -57,6 +69,8 @@ describe("CardTile", () => {
         card={makeCard({ print: { id: "print-1", ownedQuantity: 2 } })}
         collectionCode="A1"
         neededQuantity={2}
+        locale="pt"
+        t={t}
       />,
     );
     expect(container.querySelector(".card-tile")).toHaveClass("card-tile-owned");
@@ -69,6 +83,8 @@ describe("CardTile", () => {
         card={makeCard({ print: { id: "print-1", ownedQuantity: 1 } })}
         collectionCode="A1"
         neededQuantity={2}
+        locale="pt"
+        t={t}
       />,
     );
     expect(container.querySelector(".card-tile")).toHaveClass("card-tile-missing");
@@ -82,6 +98,8 @@ describe("CardTile", () => {
         collectionCode="A1"
         neededQuantity={2}
         availableQuantity={1}
+        locale="pt"
+        t={t}
       />,
     );
     // Real owned is 5, but availableQuantity (1, e.g. reserved by another
@@ -90,7 +108,29 @@ describe("CardTile", () => {
   });
 
   it("links to the card detail page for its collection", () => {
-    render(<CardTile card={makeCard({ number: 42 })} collectionCode="A1" />);
+    render(
+      <CardTile card={makeCard({ number: 42 })} collectionCode="A1" locale="pt" t={t} />,
+    );
     expect(screen.getByRole("link")).toHaveAttribute("href", "/collections/A1/cards/42");
+  });
+
+  it("shows a locale-specific rarity label", () => {
+    render(
+      <CardTile
+        card={makeCard({ rarity: "UR" })}
+        collectionCode="A1"
+        locale="en"
+        t={dictionaries.en.cardTile}
+      />,
+    );
+    expect(screen.getByText("Ultra Rare")).toBeInTheDocument();
+  });
+
+  it("builds the increase/decrease aria-labels from the card name", () => {
+    render(
+      <CardTile card={makeCard({ name: "Pikachu" })} collectionCode="A1" locale="pt" t={t} />,
+    );
+    expect(screen.getByLabelText("Aumentar quantidade de Pikachu")).toBeInTheDocument();
+    expect(screen.getByLabelText("Diminuir quantidade de Pikachu")).toBeInTheDocument();
   });
 });

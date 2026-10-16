@@ -2,14 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCardDetail } from "@/lib/queries";
-import { RARITY_CLASS, RARITY_LABEL, TYPE_LABEL, capitalize } from "@/lib/display";
+import { RARITY_CLASS, getRarityLabel, getTypeLabel, getElementLabel } from "@/lib/display";
 import { cardImageUrl } from "@/lib/images";
+import { getLocale } from "@/lib/i18n/getLocale";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export const dynamic = "force-dynamic";
 
 export default async function CardPage({
   params,
 }: PageProps<"/collections/[code]/cards/[number]">) {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const { code, number } = await params;
   const parsedNumber = Number(number);
   if (Number.isNaN(parsedNumber)) notFound();
@@ -23,7 +27,7 @@ export default async function CardPage({
   return (
     <main className="container">
       <nav className="breadcrumb">
-        <Link href="/">Coleções</Link>
+        <Link href="/">{t.breadcrumb.collections}</Link>
         <span>/</span>
         <Link href={`/collections/${collection.code}`}>{collection.name}</Link>
         <span>/</span>
@@ -46,7 +50,7 @@ export default async function CardPage({
             #{card.number} {card.name}
           </h1>
           <span className={`badge ${RARITY_CLASS[card.rarity]}`}>
-            {RARITY_LABEL[card.rarity]}
+            {getRarityLabel(card.rarity, locale)}
           </span>
         </div>
       </div>
@@ -54,61 +58,57 @@ export default async function CardPage({
       <div className="detail-card">
         <dl>
           <div className="detail-row">
-            <dt>Coleção</dt>
+            <dt>{t.cardDetailPage.collectionLabel}</dt>
             <dd>{collection.name}</dd>
           </div>
           {card.type && (
             <div className="detail-row">
-              <dt>Tipo</dt>
-              <dd>{TYPE_LABEL[card.type]}</dd>
+              <dt>{t.cardDetailPage.typeLabel}</dt>
+              <dd>{getTypeLabel(card.type, locale)}</dd>
             </div>
           )}
           {card.element && (
             <div className="detail-row">
-              <dt>Elemento</dt>
-              <dd>{capitalize(card.element)}</dd>
+              <dt>{t.cardDetailPage.elementLabel}</dt>
+              <dd>{getElementLabel(card.element, locale)}</dd>
             </div>
           )}
           {card.stage && (
             <div className="detail-row">
-              <dt>Estágio</dt>
-              <dd>{card.stage === "basic" ? "Básico" : `Estágio ${card.stage}`}</dd>
+              <dt>{t.cardDetailPage.stageLabel}</dt>
+              <dd>{t.cardDetailPage.stageValue(card.stage)}</dd>
             </div>
           )}
           {card.evolvesFrom && (
             <div className="detail-row">
-              <dt>Evolui de</dt>
+              <dt>{t.cardDetailPage.evolvesFromLabel}</dt>
               <dd>{card.evolvesFrom}</dd>
             </div>
           )}
           {card.health !== null && (
             <div className="detail-row">
-              <dt>Pontos de Vida</dt>
+              <dt>{t.cardDetailPage.healthLabel}</dt>
               <dd>{card.health}</dd>
             </div>
           )}
           {card.retreatCost !== null && (
             <div className="detail-row">
-              <dt>Custo de Recuo</dt>
+              <dt>{t.cardDetailPage.retreatCostLabel}</dt>
               <dd>{card.retreatCost}</dd>
             </div>
           )}
           {card.weakness && (
             <div className="detail-row">
-              <dt>Fraqueza</dt>
+              <dt>{t.cardDetailPage.weaknessLabel}</dt>
               <dd>{card.weakness}</dd>
             </div>
           )}
         </dl>
       </div>
 
-      <h2 className="section-title">
-        Disponível {isPackExclusive ? "exclusivamente " : ""}no(s) pacote(s)
-      </h2>
+      <h2 className="section-title">{t.cardDetailPage.availableInPacks(isPackExclusive)}</h2>
       {packs.length === 0 ? (
-        <p className="empty-state">
-          Esta carta não é obtida por um pacote específico (ex: recompensa ou promo).
-        </p>
+        <p className="empty-state">{t.cardDetailPage.noPackEmptyState}</p>
       ) : (
         <div className="pack-links">
           {packs.map((pack) => (
@@ -125,11 +125,8 @@ export default async function CardPage({
 
       {siblingCards.length > 0 && (
         <>
-          <h2 className="section-title">Também disponível em</h2>
-          <p className="empty-state">
-            É a mesma impressão (mesma arte) reaproveitada — marcar como possuída aqui
-            também conta nas coleções abaixo, e vice-versa.
-          </p>
+          <h2 className="section-title">{t.cardDetailPage.alsoAvailableInTitle}</h2>
+          <p className="empty-state">{t.cardDetailPage.reprintNote}</p>
           <div className="pack-links">
             {siblingCards.map((sibling) => (
               <Link

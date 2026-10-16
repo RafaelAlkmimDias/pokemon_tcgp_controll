@@ -66,6 +66,31 @@ a {
   gap: 1.5rem;
 }
 
+.language-switcher {
+  margin-left: auto;
+}
+
+.language-switcher select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .site-nav a:nth-child(2) {
   font-weight: 600;
   font-size: 0.9rem;

@@ -1,41 +1,45 @@
+mod app;
+mod card_tile;
 mod cardstats;
 mod db;
 mod display;
-mod handlers;
 mod i18n;
 mod images;
 mod locale;
 mod models;
 mod queries;
-mod web;
+mod settings;
+#[cfg(test)]
+mod test_support;
+mod ui;
 
-use axum::routing::get;
-use axum::Router;
-use sqlx::SqlitePool;
-use tower_http::services::ServeDir;
+use std::path::PathBuf;
 
-#[derive(Clone)]
-pub struct AppState {
-    pub pool: SqlitePool,
-}
-
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
+    let rt = tokio::runtime::Runtime::new()?;
+
     let db_path = std::env::var("DATABASE_PATH").unwrap_or_else(|_| "data/pokemon_tcgp.db".into());
-    let pool = db::connect(&db_path).await?;
-    let state = AppState { pool };
+    let pool = rt.block_on(db::connect(&db_path))?;
+    let locale = rt.block_on(settings::get_locale(&pool))?;
 
-    let app = Router::new()
-        .route("/", get(handlers::collections::index))
-        .nest_service("/public", ServeDir::new("public"))
-        .with_state(state);
+    let images_root =
+        PathBuf::from(std::env::var("IMAGES_PATH").unwrap_or_else(|_| "public/images".into()));
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".into());
-    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{port}")).await?;
-    tracing::info!("listening on http://127.0.0.1:{port}");
-    axum::serve(listener, app).await?;
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([1100.0, 750.0]),
+        ..Default::default()
+    };
+    eframe::run_native(
+        "Pokémon TCG Pocket",
+        options,
+        Box::new(move |cc| {
+            egui_extras::install_image_loaders(&cc.egui_ctx);
+            Ok(Box::new(app::App::new(pool, rt, locale, images_root)))
+        }),
+    )
+    .map_err(|err| anyhow::anyhow!(err.to_string()))?;
 
     Ok(())
 }

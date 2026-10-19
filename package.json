@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "download:images": "tsx scripts/download-images.ts",
     "sync:decks": "tsx scripts/sync-decks.ts",
+    "migrate:sqlite": "tsx scripts/migrate-to-sqlite.ts",
     "postinstall": "prisma generate",
     "test:db:up": "docker compose --profile test up -d --wait db_test",
     "test:db:down": "docker compose --profile test down",

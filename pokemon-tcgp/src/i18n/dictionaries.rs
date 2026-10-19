@@ -34,6 +34,7 @@ pub struct Layout {
     pub html_lang: &'static str,
     pub home_link: &'static str,
     pub decks_link: &'static str,
+    pub back_link: &'static str,
 }
 
 pub struct LanguageSwitcher {
@@ -89,7 +90,6 @@ pub struct CardCountLines {
 pub struct CardTile {
     pub decrease_label_prefix: &'static str,
     pub increase_label_prefix: &'static str,
-    pub sufficient_aria_label: &'static str,
 }
 
 pub struct CardFilter {
@@ -228,6 +228,7 @@ const PT: Dictionary = Dictionary {
         html_lang: "pt-BR",
         home_link: "Pokémon TCG Pocket — Controle",
         decks_link: "Baralhos",
+        back_link: "← Voltar",
     },
     language_switcher: LanguageSwitcher {
         label: "Idioma",
@@ -275,7 +276,6 @@ const PT: Dictionary = Dictionary {
     card_tile: CardTile {
         decrease_label_prefix: "Diminuir quantidade de",
         increase_label_prefix: "Aumentar quantidade de",
-        sufficient_aria_label: "Quantidade suficiente",
     },
     card_filter: CardFilter {
         placeholder: "Filtrar por nome...",
@@ -356,6 +356,7 @@ const EN: Dictionary = Dictionary {
         html_lang: "en-US",
         home_link: "Pokémon TCG Pocket — Tracker",
         decks_link: "Decks",
+        back_link: "← Back",
     },
     language_switcher: LanguageSwitcher {
         label: "Language",
@@ -403,7 +404,6 @@ const EN: Dictionary = Dictionary {
     card_tile: CardTile {
         decrease_label_prefix: "Decrease quantity of",
         increase_label_prefix: "Increase quantity of",
-        sufficient_aria_label: "Enough copies",
     },
     card_filter: CardFilter {
         placeholder: "Filter by name...",

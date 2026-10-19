@@ -56,3 +56,51 @@ pub enum CardType {
     Fossil,
     Tool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_common_excludes_only_epic_and_legendary_tiers() {
+        for common in [
+            Rarity::C,
+            Rarity::U,
+            Rarity::R,
+            Rarity::Rr,
+            Rarity::Unknown,
+        ] {
+            assert!(common.is_common(), "{common:?} should be common");
+        }
+        for not_common in [
+            Rarity::Ar,
+            Rarity::Sr,
+            Rarity::Sar,
+            Rarity::Im,
+            Rarity::Ur,
+            Rarity::S,
+            Rarity::Ssr,
+        ] {
+            assert!(!not_common.is_common(), "{not_common:?} should not be common");
+        }
+    }
+
+    #[test]
+    fn css_class_matches_the_three_visual_tiers() {
+        assert_eq!(Rarity::C.css_class(), "rarity-common");
+        assert_eq!(Rarity::Ar.css_class(), "rarity-epic");
+        assert_eq!(Rarity::Ssr.css_class(), "rarity-legendary");
+    }
+
+    #[test]
+    fn rarity_round_trips_through_its_text_representation() {
+        use std::str::FromStr;
+        // This is the exact conversion sqlx applies at the TEXT <-> enum
+        // boundary (see the `sqlx::Type` derive above) - a label that
+        // doesn't round-trip would corrupt every row read back from SQLite.
+        for (text, rarity) in [("RR", Rarity::Rr), ("SSR", Rarity::Ssr), ("C", Rarity::C)] {
+            assert_eq!(Rarity::from_str(text).unwrap(), rarity);
+            assert_eq!(rarity.to_string(), text);
+        }
+    }
+}

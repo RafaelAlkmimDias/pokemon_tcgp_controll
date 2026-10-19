@@ -1,9 +1,8 @@
-// Mirrors src/lib/i18n/locale.ts + getLocale.ts: locale is read from a
-// cookie, defaulting to English when absent or unrecognized.
-
-use axum_extra::extract::cookie::CookieJar;
-
-pub const LOCALE_COOKIE: &str = "locale";
+// Mirrors src/lib/i18n/locale.ts: just the two supported locales. Where the
+// value comes from (a cookie in the Next.js/Axum versions, now a row in
+// `app_settings` - see src/settings.rs) is deliberately not this module's
+// concern, same as the TS version kept `isLocale` separate from any one
+// storage mechanism.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Locale {
@@ -16,13 +15,6 @@ impl Locale {
         match self {
             Locale::En => "en",
             Locale::Pt => "pt",
-        }
-    }
-
-    pub fn from_cookie(jar: &CookieJar) -> Self {
-        match jar.get(LOCALE_COOKIE).map(|c| c.value()) {
-            Some("pt") => Locale::Pt,
-            _ => Locale::En,
         }
     }
 }

@@ -1,2 +1,7 @@
 data/*.db
 data/*.db-*
+target/
+
+# copied from ../public/images/ (see docs/rust-migration-checklist.md block 4);
+# same reasoning as the Next.js side's own /public/images/ rule in ../.gitignore
+public/images/
